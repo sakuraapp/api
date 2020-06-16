@@ -5,6 +5,7 @@ const UserSchema = new Schema({
         userId: String,
         accessToken: String,
         refreshToken: String,
+        lastQuery: { type: Date, default: Date.now },
     },
     profile: {
         username: String,
