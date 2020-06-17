@@ -7,20 +7,48 @@ const { ExtractJwt } = passportJwt
 const User = require('../models/user')
 const Name = require('../models/name')
 
+function formatUserProfile(profile, overrides, provider) {
+    if (!provider && typeof overrides === 'string') {
+        provider = overrides
+        overrides = null
+    }
+
+    let res
+
+    switch (provider) {
+        case 'discord':
+            let avatar
+
+            if (profile.avatar) {
+                const avatarExt = profile.avatar.startsWith('a_')
+                    ? 'gif'
+                    : 'png'
+
+                avatar = `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${avatarExt}`
+            }
+
+            res = {
+                username: profile.username,
+                discriminator: null,
+                avatar,
+            }
+    }
+
+    if (overrides) {
+        for (var i in overrides) {
+            res[i] = overrides[i]
+        }
+    }
+
+    return res
+}
+
 async function findOrCreateUser(accessToken, refreshToken, profile) {
     const name = profile.username
 
     var user = await User.findOne({ 'credentials.userId': String(profile.id) })
 
     if (!user) {
-        var avatar
-
-        if (profile.avatar) {
-            const avatarExt = profile.avatar.startsWith('a_') ? 'gif' : 'png'
-
-            avatar = `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${avatarExt}`
-        }
-
         const discriminator = await Name.findFreeDiscriminator(name)
 
         if (!discriminator) {
@@ -33,11 +61,7 @@ async function findOrCreateUser(accessToken, refreshToken, profile) {
                 accessToken,
                 refreshToken,
             },
-            profile: {
-                username: name,
-                discriminator,
-                avatar,
-            },
+            profile: formatUserProfile(profile, { discriminator }, 'discord'),
         })
 
         await Name.addDiscriminator(name, discriminator, user._id)
@@ -81,3 +105,24 @@ passport.use(
         }
     )
 )
+
+exports.fetchUserProfile = (user, strategyName) => {
+    return new Promise((resolve, reject) => {
+        const strategy = passport._strategies[strategyName]
+
+        strategy.userProfile(user.credentials.accessToken, (err, res) => {
+            if (err) reject(err)
+            else {
+                if (strategyName === 'discord') {
+                    res = formatUserProfile(
+                        res,
+                        { discriminator: user.profile.discriminator },
+                        'discord'
+                    )
+                }
+
+                resolve(res)
+            }
+        })
+    })
+}
