@@ -7,8 +7,6 @@ const { ExtractJwt } = passportJwt
 const User = require('../models/user')
 const Name = require('../models/name')
 
-const OAUTH_MAX_AGE = 5000
-
 async function findOrCreateUser(accessToken, refreshToken, profile) {
     const name = profile.username
 
@@ -64,33 +62,22 @@ passport.use(
     )
 )
 
-const strategy = new JwtStrategy(
-    {
-        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        secretOrKey: process.env.JWT_PUBLIC_KEY,
-    },
-    (payload, cb) => {
-        User.findOne({ _id: payload.id })
-            .then((user) => {
-                if (user) {
-                    cb(null, user)
-
-                    const now = new Date().getTime()
-
-                    if (
-                        now - user.credentials.lastQuery.getTime() >
-                        OAUTH_MAX_AGE
-                    ) {
-                        console.log('ok')
-                    }
-                } else {
-                    cb(null, false)
-                }
-            })
-            .catch((err) => cb(err))
-    }
-)
-
 passport.use(
-    strategy
+    new JwtStrategy(
+        {
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+            secretOrKey: process.env.JWT_PUBLIC_KEY,
+        },
+        (payload, cb) => {
+            User.findOne({ _id: payload.id })
+                .then((user) => {
+                    if (user) {
+                        cb(null, user)
+                    } else {
+                        cb(null, false)
+                    }
+                })
+                .catch((err) => cb(err))
+        }
+    )
 )
