@@ -209,6 +209,7 @@ class Logger {
 module.exports = new Logger({
     levels: [
         { name: 'info', function: 'write', color: 'green', save: false },
+        { name: 'debug', color: 'green', save: false },
         { name: 'warning', function: 'warn', color: 'yellow' },
         { name: 'error', color: 'red' },
         { name: 'fatal', color: 'red', fatal: true },
