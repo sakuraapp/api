@@ -29,6 +29,8 @@ handler.on('authenticate', 'string', (token, client) => {
     authenticate(token)
         .then((user) => {
             client.user = user
+            client.id = client.user.profile.id = user._id
+
             client.send({ action: 'authenticated' })
         })
         .catch((err) => {

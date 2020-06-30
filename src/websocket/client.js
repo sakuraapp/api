@@ -9,6 +9,10 @@ class Client {
     }
 
     send(data) {
+        if (!data.timestamp) {
+            data.timestamp = new Date().getTime()
+        }
+
         const packet = JSON.stringify(data)
 
         this.socket.send(packet)
@@ -31,8 +35,15 @@ class Client {
         this.socket.on('close', () => {
             logger.debug('A client has disconnected')
 
+            this.handleDisconnect()
             this.messageBroker.handle({ action: 'disconnect' }, this)
         })
+    }
+
+    handleDisconnect() {
+        if (this.room) {
+            this.room.remove(this)
+        }
     }
 }
 

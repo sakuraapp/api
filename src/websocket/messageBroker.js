@@ -25,6 +25,8 @@ class MessageBroker extends EventEmitter {
     handle(packet, client) {
         if (!packet.action) return
 
+        this.emit(packet.action, packet, client)
+
         for (const handler of this.handlers) {
             const listeners = handler.listeners.get(packet.action) || []
 
