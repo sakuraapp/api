@@ -33,6 +33,7 @@
   },
   "_moduleAliases": {
     "~": "src",
-    "@": "src"
+    "@": "src",
+    "@common": "../common"
   }
 }
