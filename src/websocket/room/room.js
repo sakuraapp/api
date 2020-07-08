@@ -1,4 +1,5 @@
 const { EventEmitter } = require('events')
+const Opcodes = require('@common/opcodes.json')
 
 class Room extends EventEmitter {
     constructor(id) {
@@ -19,16 +20,16 @@ class Room extends EventEmitter {
         }
 
         this.send({
-            action: 'add user',
-            data: client.profile,
+            op: Opcodes.ADD_USER,
+            d: client.profile,
         })
 
         this.clients.push(client)
 
         client.room = this
         client.send({
-            action: 'join room',
-            data: this.getRoomInfo(),
+            op: Opcodes.JOIN_ROOM,
+            d: this.getRoomInfo(),
         })
 
         this.sendRoomState(client)
@@ -40,8 +41,8 @@ class Room extends EventEmitter {
         if (i > -1) {
             this.splice(i, 1)
             this.send({
-                action: 'remove user',
-                data: client.id,
+                op: Opcodes.REMOVE_USER,
+                d: client.id,
             })
 
             client.room = null

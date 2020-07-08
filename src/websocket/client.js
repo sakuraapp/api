@@ -9,8 +9,8 @@ class Client {
     }
 
     send(data) {
-        if (!data.timestamp) {
-            data.timestamp = new Date().getTime()
+        if (!data.t) {
+            data.t = new Date().getTime()
         }
 
         const packet = JSON.stringify(data)

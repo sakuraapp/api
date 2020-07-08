@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken')
 const Handler = require('./handler')
 const handler = new Handler()
 
+const Opcodes = require('@common/opcodes.json')
+
 const User = require('~/models/user')
 const logger = require('../../utils/logger')
 
@@ -25,13 +27,13 @@ function authenticate(token) {
     })
 }
 
-handler.on('authenticate', 'string', (token, client) => {
+handler.on(Opcodes.AUTHENTICATE, 'string', (token, client) => {
     authenticate(token)
         .then((user) => {
             client.user = user
             client.id = client.user.profile.id = user._id
 
-            client.send({ action: 'authenticated' })
+            client.send({ op: Opcodes.AUTHENTICATE, d: true })
         })
         .catch((err) => {
             logger.debug(err.stack || err)

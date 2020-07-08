@@ -23,15 +23,15 @@ class MessageBroker extends EventEmitter {
     }
 
     handle(packet, client) {
-        if (!packet.action) return
+        if (!packet.op) return
 
-        this.emit(packet.action, packet, client)
+        this.emit(packet.op, packet, client)
 
         for (const handler of this.handlers) {
-            const listeners = handler.listeners.get(packet.action) || []
+            const listeners = handler.listeners.get(packet.op) || []
 
             for (const listener of listeners) {
-                listener.handle(packet.data, client, packet.timestamp)
+                listener.handle(packet.d, client, packet.t)
             }
         }
     }

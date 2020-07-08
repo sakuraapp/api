@@ -53,7 +53,7 @@ class Listener {
 class Handler {
     constructor() {
         /**
-         * @prop {Map<String, Listener>}
+         * @prop {Map<Number, Listener>}
          */
         this.listeners = new Map()
 
@@ -65,26 +65,26 @@ class Handler {
 
     /**
      * @method
-     * @param {string} action
+     * @param {number|string} opcode
      * @param {string|Function|object} typeDefinitions
      * @param {Function} callback
      */
     /**
      * @method
-     * @param {string} action
+     * @param {number|string} opcode
      * @param {Function} callback
      */
-    on(action, typeDefs, cb) {
+    on(opcode, typeDefs, cb) {
         if (!cb) {
             cb = typeDefs
             typeDefs = undefined
         }
 
-        if (!this.listeners.has(action)) {
-            this.listeners.set(action, [])
+        if (!this.listeners.has(opcode)) {
+            this.listeners.set(opcode, [])
         }
 
-        this.listeners.get(action).push(new Listener(cb, typeDefs, this))
+        this.listeners.get(opcode).push(new Listener(cb, typeDefs, this))
     }
 
     async runMiddleware(args, cb) {
