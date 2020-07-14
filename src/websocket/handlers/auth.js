@@ -6,7 +6,7 @@ const handler = new Handler()
 const Opcodes = require('@common/opcodes.json')
 
 const User = require('~/models/user')
-const logger = require('../../utils/logger')
+const logger = require('~/utils/logger')
 
 function authenticate(token) {
     return new Promise((resolve, reject) => {
@@ -40,5 +40,11 @@ handler.on(Opcodes.AUTHENTICATE, 'string', (token, client) => {
             client.socket.close()
         })
 })
+
+handler.requireAuth = (data, client, next) => {
+    if (client.user) {
+        next()
+    }
+}
 
 module.exports = handler

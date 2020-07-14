@@ -8,6 +8,19 @@ class Client {
         this.bindEvents()
     }
 
+    get username() {
+        return this.user.profile.username
+    }
+
+    get profile() {
+        if (!this.user) return null
+
+        return {
+            id: this.id,
+            ...this.user.profile.toObject(),
+        }
+    }
+
     send(data) {
         if (!data.t) {
             data.t = new Date().getTime()

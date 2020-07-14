@@ -10,6 +10,16 @@ class Room extends EventEmitter {
         this.owner = null
     }
 
+    send(data, ignored = []) {
+        if (ignored && !Array.isArray(ignored)) ignored = [ignored]
+
+        for (const client of this.clients) {
+            if (!ignored.includes(client)) {
+                client.send(data)
+            }
+        }
+    }
+
     add(client) {
         if (!this.owner) {
             this.owner = client
@@ -32,14 +42,14 @@ class Room extends EventEmitter {
             d: this.getRoomInfo(),
         })
 
-        this.sendRoomState(client)
+        this.sendPlayerState(client)
     }
 
     remove(client) {
         const i = this.clients.indexOf(client)
 
         if (i > -1) {
-            this.splice(i, 1)
+            this.clients.splice(i, 1)
             this.send({
                 op: Opcodes.REMOVE_USER,
                 d: client.id,
@@ -51,12 +61,13 @@ class Room extends EventEmitter {
 
     getRoomInfo() {
         return {
+            id: this.id,
             owner: this.owner.id,
             users: this.clients.map((client) => client.profile),
         }
     }
 
-    sendRoomState(target) {
+    sendPlayerState(target) {
         if (!target) {
             target = this
         }

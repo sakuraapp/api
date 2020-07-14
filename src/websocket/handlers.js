@@ -1,3 +1,6 @@
+const authHandler = require('./handlers/auth')
+
 module.exports = (messageBroker) => {
-    messageBroker.use(require('./handlers/auth'))
+    messageBroker.use(authHandler)
+    messageBroker.use(authHandler.requireAuth, require('./handlers/room'))
 }
