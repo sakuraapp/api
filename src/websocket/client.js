@@ -1,4 +1,5 @@
 const logger = require('../utils/logger')
+const Opcodes = require('@common/opcodes.json')
 
 class Client {
     constructor(socket, messageBroker) {
@@ -22,6 +23,8 @@ class Client {
     }
 
     send(data) {
+        if (!this.socket) return
+
         if (!data.t) {
             data.t = new Date().getTime()
         }
@@ -48,15 +51,9 @@ class Client {
         this.socket.on('close', () => {
             logger.debug('A client has disconnected')
 
-            this.handleDisconnect()
-            this.messageBroker.handle({ action: 'disconnect' }, this)
+            this.socket = null
+            this.messageBroker.handle({ op: Opcodes.DISCONNECT }, this)
         })
-    }
-
-    handleDisconnect() {
-        if (this.room) {
-            this.room.remove(this)
-        }
     }
 }
 

@@ -10,10 +10,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
     "colors": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "got": "^11.5.1",
     "helmet": "^3.22.0",
     "jsonwebtoken": "^8.5.1",
     "module-alias": "^2.2.2",
@@ -22,6 +24,7 @@
     "passport": "^0.4.1",
     "passport-discord": "^0.1.4",
     "passport-jwt": "^4.0.0",
+    "passport-oauth2-refresh": "^2.0.0",
     "shortid": "^2.2.15",
     "ws": "^7.3.0"
   },

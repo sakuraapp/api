@@ -1,13 +1,31 @@
 const { EventEmitter } = require('events')
 const Opcodes = require('@common/opcodes.json')
+const Queue = require('./queue')
 
 class Room extends EventEmitter {
     constructor(id) {
         super()
 
         this.id = id
+        this.ownerId = null
+        this.ownerUsername = null
+        this.private = false
+
         this.clients = []
-        this.owner = null
+        this.messages = []
+        this.invites = []
+
+        this.queue = new Queue(this)
+
+        this.state = {
+            playing: false,
+            url: null,
+            currentDuration: null,
+        }
+    }
+
+    get owner() {
+        return this.clients.find((client) => client.id === this.ownerId)
     }
 
     send(data, ignored = []) {
@@ -21,28 +39,57 @@ class Room extends EventEmitter {
     }
 
     add(client) {
-        if (!this.owner) {
-            this.owner = client
+        if (!this.ownerId) {
+            this.ownerId = client.id
+        }
+
+        if (client.id === this.ownerId) {
+            this.ownerUsername = client.username
         }
 
         if (client.room) {
             client.room.remove(client)
         }
 
-        this.send({
-            op: Opcodes.ADD_USER,
-            d: client.profile,
-        })
+        if (this.can(client, 'join room')) {
+            const index = this.invites.indexOf(client)
 
-        this.clients.push(client)
+            if (index > -1) {
+                this.invites.splice(index, 1)
+            }
 
-        client.room = this
-        client.send({
-            op: Opcodes.JOIN_ROOM,
-            d: this.getRoomInfo(),
-        })
+            this.send({
+                op: Opcodes.ADD_USER,
+                d: client.profile,
+            })
 
-        this.sendPlayerState(client)
+            this.clients.push(client)
+
+            client.room = this
+            client.send({
+                op: Opcodes.JOIN_ROOM,
+                d: {
+                    status: 200,
+                    room: this.getInfo(),
+                },
+            })
+
+            this.sendPlayerState(client)
+        } else {
+            client.send({
+                op: Opcodes.JOIN_ROOM,
+                d: { status: 401 },
+            })
+
+            const owner = this.owner
+
+            if (owner) {
+                this.owner.send({
+                    op: Opcodes.ROOM_JOIN_REQUEST,
+                    d: client.profile,
+                })
+            }
+        }
     }
 
     remove(client) {
@@ -57,13 +104,29 @@ class Room extends EventEmitter {
 
             client.room = null
         }
+
+        client.send({
+            op: Opcodes.LEAVE_ROOM,
+            d: this.id,
+        })
     }
 
-    getRoomInfo() {
+    getInfo() {
         return {
             id: this.id,
             owner: this.owner.id,
             users: this.clients.map((client) => client.profile),
+        }
+    }
+
+    getPublicInfo() {
+        const currentItem = this.private ? null : this.queue.currentItem
+
+        return {
+            id: this.id,
+            owner: this.ownerUsername,
+            private: this.private,
+            currentItem,
         }
     }
 
@@ -72,7 +135,49 @@ class Room extends EventEmitter {
             target = this
         }
 
-        //target.send()
+        target.send({
+            op: Opcodes.PLAYER_STATE,
+            d: this.state,
+        })
+    }
+
+    sendMessage(content, client) {
+        const message = {
+            content,
+            author: client.id,
+            time: new Date().getTime(),
+        }
+
+        message.id = this.messages.push(message)
+
+        this.send(
+            {
+                action: Opcodes.SEND_MESSAGE,
+                message,
+            },
+            client
+        )
+
+        return message.id
+    }
+
+    getClientById(id) {
+        return this.clients.find((client) => client.id === id)
+    }
+
+    hasUser(id) {
+        return this.getClientById(id) !== null
+    }
+
+    can(client, action) {
+        switch (action) {
+            case 'join room':
+                return (
+                    !this.private ||
+                    client.id === this.ownerId ||
+                    this.invites.includes(client)
+                )
+        }
     }
 }
 

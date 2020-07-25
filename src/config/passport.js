@@ -1,5 +1,6 @@
 const passport = require('passport')
 const passportJwt = require('passport-jwt')
+const refresh = require('passport-oauth2-refresh')
 const DiscordStrategy = require('passport-discord').Strategy
 const JwtStrategy = passportJwt.Strategy
 const { ExtractJwt } = passportJwt
@@ -65,26 +66,40 @@ async function findOrCreateUser(accessToken, refreshToken, profile) {
         })
 
         await Name.addDiscriminator(name, discriminator, user._id)
+    } else {
+        if (refreshToken != user.credentials.refreshToken) {
+            await User.updateOne(
+                { _id: user._id },
+                {
+                    credentials: {
+                        refreshToken: refreshToken,
+                    },
+                }
+            )
+
+            user.credentials.refreshToken = refreshToken
+        }
     }
 
     return user
 }
 
-passport.use(
-    new DiscordStrategy(
-        {
-            clientID: process.env.DISCORD_CLIENT_ID,
-            clientSecret: process.env.DISCORD_CLIENT_SECRET,
-            callbackURL: process.env.DISCORD_REDIRECT_URI,
-            scope: process.env.DISCORD_SCOPES.split(', '),
-        },
-        (accessToken, refreshToken, profile, cb) => {
-            findOrCreateUser(accessToken, refreshToken, profile)
-                .then((user) => cb(null, user))
-                .catch((err) => cb(err))
-        }
-    )
+const discordStrategy = new DiscordStrategy(
+    {
+        clientID: process.env.DISCORD_CLIENT_ID,
+        clientSecret: process.env.DISCORD_CLIENT_SECRET,
+        callbackURL: process.env.DISCORD_REDIRECT_URI,
+        scope: process.env.DISCORD_SCOPES.split(', '),
+    },
+    (accessToken, refreshToken, profile, cb) => {
+        findOrCreateUser(accessToken, refreshToken, profile)
+            .then((user) => cb(null, user))
+            .catch((err) => cb(err))
+    }
 )
+
+passport.use(discordStrategy)
+refresh.use(discordStrategy)
 
 passport.use(
     new JwtStrategy(
@@ -106,13 +121,54 @@ passport.use(
     )
 )
 
+function attemptRefresh(user, strategyName) {
+    return new Promise((resolve, reject) => {
+        refresh.requestNewAccessToken(
+            strategyName,
+            user.credentials.refreshToken,
+            (err, accessToken, refreshToken) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    user.accessToken = accessToken
+                    user.refreshToken = refreshToken
+
+                    User.updateOne(
+                        { _id: user._id },
+                        {
+                            credentials: {
+                                accessToken,
+                                refreshToken,
+                            },
+                        }
+                    )
+                        .then(resolve)
+                        .catch(reject)
+                }
+            }
+        )
+    })
+}
+
 exports.fetchUserProfile = (user, strategyName) => {
     return new Promise((resolve, reject) => {
         const strategy = passport._strategies[strategyName]
 
         strategy.userProfile(user.credentials.accessToken, (err, res) => {
-            if (err) reject(err)
-            else {
+            if (err) {
+                if (user.credentials.refreshToken) {
+                    attemptRefresh(user, strategyName)
+                        .then(() => {
+                            exports
+                                .fetchUserProfile(user, strategyName)
+                                .then(resolve)
+                                .catch(reject)
+                        })
+                        .catch(reject)
+                } else {
+                    reject(err)
+                }
+            } else {
                 if (strategyName === 'discord') {
                     res = formatUserProfile(
                         res,
@@ -126,3 +182,5 @@ exports.fetchUserProfile = (user, strategyName) => {
         })
     })
 }
+
+exports.requireAuth = passport.authenticate('jwt', { session: false })

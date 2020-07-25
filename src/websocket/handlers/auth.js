@@ -31,7 +31,7 @@ handler.on(Opcodes.AUTHENTICATE, 'string', (token, client) => {
     authenticate(token)
         .then((user) => {
             client.user = user
-            client.id = client.user.profile.id = user._id
+            client.id = client.user.profile.id = user._id.toString()
 
             client.send({ op: Opcodes.AUTHENTICATE, d: true })
         })

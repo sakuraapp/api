@@ -19,8 +19,20 @@ class RoomManager {
         return room
     }
 
+    find(id) {
+        return this.rooms.get(id)
+    }
+
+    findByOwner(id) {
+        for (const room of this.rooms.values()) {
+            if (room.ownerId === id) {
+                return room
+            }
+        }
+    }
+
     join(id, client) {
-        const room = this.rooms.get(id)
+        const room = this.find(id)
 
         if (!room) {
             throw new Error(`Room of ID ${id} doesn't exist.`)
