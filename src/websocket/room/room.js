@@ -20,7 +20,7 @@ class Room extends EventEmitter {
         this.state = {
             playing: false,
             url: null,
-            currentDuration: null,
+            currentTime: null,
         }
     }
 

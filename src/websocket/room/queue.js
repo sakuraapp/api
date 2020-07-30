@@ -39,7 +39,7 @@ class Queue {
         this.currentItem = item
         this.room.state = {
             playing: false,
-            currentDuration: 0,
+            currentTime: 0,
             url: item.url,
         }
 
