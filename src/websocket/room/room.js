@@ -1,5 +1,6 @@
 const { EventEmitter } = require('events')
 const Opcodes = require('@common/opcodes.json')
+const Permissions = require('@common/permissions.json')
 const Queue = require('./queue')
 
 class Room extends EventEmitter {
@@ -21,6 +22,7 @@ class Room extends EventEmitter {
             playing: false,
             url: null,
             currentTime: null,
+            playbackStart: null,
         }
     }
 
@@ -71,6 +73,7 @@ class Room extends EventEmitter {
                 d: {
                     status: 200,
                     room: this.getInfo(),
+                    permissions: this.getPermissions(client),
                 },
             })
 
@@ -130,15 +133,61 @@ class Room extends EventEmitter {
         }
     }
 
-    sendPlayerState(target) {
+    getState() {
+        const state = Object.assign({}, this.state)
+
+        if (state.playing) {
+            state.currentTime = this.getCurrentTime()
+        }
+
+        return state
+    }
+
+    getCurrentTime() {
+        console.log(
+            this.state.currentTime,
+            (new Date().getTime() - this.state.playbackStart) / 1000
+        )
+        return (
+            this.state.currentTime +
+            (new Date().getTime() - this.state.playbackStart) / 1000
+        )
+    }
+
+    getPermissions(client) {
+        if (client.id === this.ownerId) {
+            return Object.values(Permissions)
+        }
+
+        return [Permissions.QUEUE_ADD]
+    }
+
+    setPlaying(val, send = true) {
+        if (!val) {
+            if (this.state.playing) {
+                this.state.currentTime = this.getCurrentTime()
+            }
+        } else {
+            this.state.playbackStart = new Date().getTime()
+        }
+
+        this.state.playing = val
+
+        if (send) this.sendPlayerState()
+    }
+
+    sendPlayerState(target, ignored) {
         if (!target) {
             target = this
         }
 
-        target.send({
-            op: Opcodes.PLAYER_STATE,
-            d: this.state,
-        })
+        target.send(
+            {
+                op: Opcodes.PLAYER_STATE,
+                d: this.getState(),
+            },
+            ignored
+        )
     }
 
     sendMessage(content, client) {
@@ -169,6 +218,10 @@ class Room extends EventEmitter {
         return this.getClientById(id) !== null
     }
 
+    hasPermission(name, client) {
+        return this.can(client, name)
+    }
+
     can(client, action) {
         switch (action) {
             case 'join room':
@@ -177,6 +230,11 @@ class Room extends EventEmitter {
                     client.id === this.ownerId ||
                     this.invites.includes(client)
                 )
+                break
+            default:
+                const perms = this.getPermissions(client)
+
+                return perms.includes(Permissions[action])
         }
     }
 }

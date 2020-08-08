@@ -68,16 +68,9 @@ async function findOrCreateUser(accessToken, refreshToken, profile) {
         await Name.addDiscriminator(name, discriminator, user._id)
     } else {
         if (refreshToken != user.credentials.refreshToken) {
-            await User.updateOne(
-                { _id: user._id },
-                {
-                    credentials: {
-                        refreshToken: refreshToken,
-                    },
-                }
-            )
-
             user.credentials.refreshToken = refreshToken
+
+            await user.save()
         }
     }
 
@@ -130,20 +123,10 @@ function attemptRefresh(user, strategyName) {
                 if (err) {
                     reject(err)
                 } else {
-                    user.accessToken = accessToken
-                    user.refreshToken = refreshToken
+                    user.credentials.accessToken = accessToken
+                    user.credentials.refreshToken = refreshToken
 
-                    User.updateOne(
-                        { _id: user._id },
-                        {
-                            credentials: {
-                                accessToken,
-                                refreshToken,
-                            },
-                        }
-                    )
-                        .then(resolve)
-                        .catch(reject)
+                    user.save().then(resolve).catch(reject)
                 }
             }
         )

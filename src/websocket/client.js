@@ -55,6 +55,10 @@ class Client {
             this.messageBroker.handle({ op: Opcodes.DISCONNECT }, this)
         })
     }
+
+    hasPermission(name) {
+        return this.room.hasPermission(name, this)
+    }
 }
 
 module.exports = Client

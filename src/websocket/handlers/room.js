@@ -33,6 +33,38 @@ handler.on(Opcodes.JOIN_ROOM, 'string', (data, client) => {
     }
 })
 
+handler.on(Opcodes.PLAYER_STATE, (data, client) => {
+    if (!client.room || !data) {
+        return
+    }
+
+    const { room } = client
+
+    if (!room.hasPermission('VIDEO_REMOTE', client)) {
+        return
+    }
+
+    const now = new Date().getTime()
+    const latency = now - data.t
+
+    const { playing, currentTime } = data
+
+    let valid = false
+
+    if (!isNaN(currentTime) && currentTime !== null) {
+        room.state.currentTime = currentTime + latency / 1000
+        room.state.playbackStart = now
+        valid = true
+    }
+
+    if (typeof playing === 'boolean') {
+        room.setPlaying(playing, false)
+        valid = true
+    }
+
+    if (valid) room.sendPlayerState()
+})
+
 handler.on(Opcodes.LEAVE_ROOM, (data, client) => {
     if (client.room) {
         client.room.remove(client)
@@ -41,6 +73,10 @@ handler.on(Opcodes.LEAVE_ROOM, (data, client) => {
 
 handler.on(Opcodes.QUEUE_ADD, 'string', (data, client) => {
     if (!client.room) {
+        return
+    }
+
+    if (!client.hasPermission('QUEUE_ADD')) {
         return
     }
 
