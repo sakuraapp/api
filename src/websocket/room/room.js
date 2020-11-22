@@ -16,14 +16,8 @@ class Room extends EventEmitter {
         this.messages = []
         this.invites = []
 
+        this.state = null
         this.queue = new Queue(this)
-
-        this.state = {
-            playing: false,
-            url: null,
-            currentTime: null,
-            playbackStart: null,
-        }
     }
 
     get owner() {
@@ -119,6 +113,7 @@ class Room extends EventEmitter {
             id: this.id,
             owner: this.owner.id,
             users: this.clients.map((client) => client.profile),
+            queue: this.queue.items,
         }
     }
 
@@ -201,8 +196,8 @@ class Room extends EventEmitter {
 
         this.send(
             {
-                action: Opcodes.SEND_MESSAGE,
-                message,
+                op: Opcodes.SEND_MESSAGE,
+                d: message,
             },
             client
         )
@@ -212,6 +207,10 @@ class Room extends EventEmitter {
 
     getClientById(id) {
         return this.clients.find((client) => client.id === id)
+    }
+
+    getClientBySocketId(socketId) {
+        return this.clients.find((client) => client.socketId === socketId)
     }
 
     hasUser(id) {
@@ -236,6 +235,30 @@ class Room extends EventEmitter {
 
                 return perms.includes(Permissions[action])
         }
+    }
+
+    findClientsWithPermissions(actions) {
+        const clients = []
+        const permissions = actions.map((action) => Permissions[action])
+
+        for (const client of this.clients) {
+            const perms = this.getPermissions(client)
+            let valid = true
+
+            for (const permission of permissions) {
+                if (!perms.includes(permission)) {
+                    valid = false
+
+                    break
+                }
+            }
+
+            if (valid) {
+                clients.push(client)
+            }
+        }
+
+        return clients
     }
 }
 

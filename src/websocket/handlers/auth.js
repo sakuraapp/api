@@ -33,7 +33,10 @@ handler.on(Opcodes.AUTHENTICATE, 'string', (token, client) => {
             client.user = user
             client.id = client.user.profile.id = user._id.toString()
 
-            client.send({ op: Opcodes.AUTHENTICATE, d: true })
+            client.send({
+                op: Opcodes.AUTHENTICATE,
+                d: { socketId: client.socketId },
+            })
         })
         .catch((err) => {
             logger.debug(err.stack || err)

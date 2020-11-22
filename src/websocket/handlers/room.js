@@ -1,6 +1,7 @@
 const Handler = require('./handler')
 const Opcodes = require('@common/opcodes.json')
 const roomManager = require('../room/manager')
+const { getDomain, getYoutubeVideoId } = require('~/utils')
 
 const handler = new Handler()
 
@@ -45,9 +46,13 @@ handler.on(Opcodes.PLAYER_STATE, (data, client) => {
     }
 
     const now = new Date().getTime()
-    const latency = now - data.t
+    let latency = now - data.t
 
     const { playing, currentTime } = data
+
+    if (!playing) {
+        latency = 0
+    }
 
     let valid = false
 
@@ -80,10 +85,60 @@ handler.on(Opcodes.QUEUE_ADD, 'string', (data, client) => {
         return
     }
 
+    const domain = getDomain(data)
+
+    switch (domain) {
+        case 'youtube.com':
+            const id = getYoutubeVideoId(data)
+
+            if (id) {
+                data = `https://www.youtube.com/embed/${id}`
+            }
+    }
+
     client.room.queue.add({
         url: data,
         author: client.id,
     })
+})
+
+handler.on(Opcodes.QUEUE_REMOVE, 'number', (data, client) => {
+    if (!client.room) {
+        return
+    }
+
+    if (!client.hasPermission('QUEUE_EDIT')) {
+        return
+    }
+
+    client.room.queue.remove(data)
+})
+
+handler.on(Opcodes.VIDEO_END, 'number', (data, client) => {
+    if (!client.room) {
+        return
+    }
+
+    const { room } = client
+    const clients = room.findClientsWithPermissions(['VIDEO_REMOTE'])
+
+    if (clients.length === 0 || clients.includes(client)) {
+        if (data === room.queue.itemId) {
+            room.queue.next(true)
+        }
+    }
+})
+
+handler.on(Opcodes.VIDEO_SKIP, (data, client) => {
+    if (!client.room) {
+        return
+    }
+
+    if (!client.hasPermission('VIDEO_REMOTE')) {
+        return
+    }
+
+    client.room.queue.next(true)
 })
 
 module.exports = handler

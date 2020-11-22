@@ -1,8 +1,10 @@
 const logger = require('../utils/logger')
+const { v4: uuid } = require('uuid')
 const Opcodes = require('@common/opcodes.json')
 
 class Client {
     constructor(socket, messageBroker) {
+        this.socketId = uuid()
         this.socket = socket
         this.messageBroker = messageBroker
 
