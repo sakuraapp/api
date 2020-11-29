@@ -1,41 +1,43 @@
-const { Router } = require('express')
-const { fetchUserProfile } = require('../config/passport')
+const { requireAuth, fetchUserProfile } = require('../config/passport')
 const User = require('../models/user')
-const router = Router()
 
-router.get('/me', async (req, res) => {
-    let profile
-    let different
+module.exports = (fastify, opts, next) => {
+    fastify.addHook('preHandler', requireAuth)
 
-    try {
-        profile = await fetchUserProfile(req.user, 'discord')
-    } catch (err) {
-        console.log(err)
+    fastify.get('/me', async (req, res) => {
+        let profile
+        let different
 
-        return res.status(401).end('401 Unauthorized')
-    }
+        try {
+            profile = await fetchUserProfile(req.user, 'discord')
+        } catch (err) {
+            console.log(err)
 
-    for (const key in profile) {
-        if (profile[key] !== req.user.profile[key]) {
-            req.user.profile[key] = profile[key]
-            different = true
+            return res.status(401).end('401 Unauthorized')
         }
-    }
 
-    if (different) {
-        await User.updateOne(
-            { _id: req.user._id },
-            {
-                profile: req.user.profile.toObject(),
+        for (const key in profile) {
+            if (profile[key] !== req.user.profile[key]) {
+                req.user.profile[key] = profile[key]
+                different = true
             }
-        )
-    }
+        }
 
-    res.json({
-        id: req.user._id,
-        discordId: req.user.credentials.userId,
-        ...req.user.profile,
+        if (different) {
+            await User.updateOne(
+                { _id: req.user._id },
+                {
+                    profile: req.user.profile.toObject(),
+                }
+            )
+        }
+
+        res.json({
+            id: req.user._id,
+            discordId: req.user.credentials.userId,
+            ...req.user.profile,
+        })
     })
-})
 
-module.exports = router
+    next()
+}

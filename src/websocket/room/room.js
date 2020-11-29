@@ -71,7 +71,9 @@ class Room extends EventEmitter {
                 },
             })
 
-            this.sendPlayerState(client)
+            if (this.queue.currentItem && this.queue.currentItem.url) {
+                this.sendPlayerState(client)
+            }
         } else {
             client.send({
                 op: Opcodes.JOIN_ROOM,
@@ -128,7 +130,7 @@ class Room extends EventEmitter {
             d: this.id,
         })
 
-        if (this.clients.length === 0) {
+        if (this.clients.length === 0 && this.state.playing) {
             this.state.currentTime = this.getCurrentTime()
             this.state.playing = false
             this.state.playbackStart = null

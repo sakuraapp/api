@@ -1,20 +1,20 @@
-const { Server } = require('ws')
-
 const logger = require('../utils/logger')
 const Client = require('./client')
 
 const MessageBroker = require('./messageBroker')
 const handlers = require('./handlers')
 
-module.exports = (appServer) => {
-    const server = new Server({ server: appServer })
+module.exports = (fastify) => {
     const messageBroker = new MessageBroker()
 
     handlers(messageBroker)
 
-    server.on('connection', (socket) => {
-        logger.debug('A client connected.')
+    fastify.register(require('fastify-websocket'), {
+        handle(conn) {
+            logger.debug('A client connected.')
 
-        new Client(socket, messageBroker)
+            new Client(conn.socket, messageBroker)
+        },
+        options: {},
     })
 }

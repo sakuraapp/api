@@ -5,13 +5,7 @@ require('./config/ssl')
 require('./config/jwt')
 require('./config/passport')
 
-const express = require('express')
-
-const helmet = require('helmet')
-const cors = require('cors')
-
 const mongoose = require('mongoose')
-const passport = require('passport')
 
 const logger = require('./utils/logger')
 const routes = require('./routes')
@@ -28,18 +22,16 @@ mongoose.connect('mongodb://localhost/sakura', {
     useUnifiedTopology: true,
 })
 
-const app = express()
-const server = createServer(app)
+const fastify = createServer()
 
-app.use(helmet())
-app.use(cors())
-app.use(passport.initialize())
+fastify.register(require('fastify-helmet'))
+fastify.register(require('fastify-cors'))
 
-routes(app)
-websocket(server)
+routes(fastify)
+websocket(fastify)
 
 console.log(`Sakura API v${version}\n`)
 
-server.listen(port, () => {
+fastify.listen(port, () => {
     logger.write(`Listening on port ${port}`)
 })

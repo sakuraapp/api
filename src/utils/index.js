@@ -1,5 +1,6 @@
-const http = require('http')
-const https = require('https')
+const fastify = require('fastify')
+const passport = require('passport')
+const passportHttp = require('passport/lib/http/request')
 
 const got = require('got')
 const cheerio = require('cheerio')
@@ -9,16 +10,42 @@ const favicons = {
     'crunchyroll.com': 'https://www.crunchyroll.com/favicons/favicon-32x32.png',
 }
 
-exports.createServer = function (app) {
-    return Number(process.env.USE_SSL)
-        ? https.createServer(
-              {
-                  cert: process.env.SSL_CERT,
-                  key: process.env.SSL_KEY,
-              },
-              app
-          )
-        : http.createServer(app)
+exports.isDev = () => process.env.NODE_ENV !== 'production'
+
+exports.createServer = () => {
+    const opts = {
+        logging: this.isDev(),
+    }
+
+    if (Number(process.env.USE_SSL)) {
+        opts.https = {
+            cert: process.env.SSL_CERT,
+            key: process.env.SSL_KEY,
+        }
+    }
+
+    const app = fastify(opts)
+
+    // passport support
+    app.decorateReply('setHeader', function (key, value) {
+        this.header(key, value)
+    })
+
+    const senders = ['end', 'json']
+
+    for (const sender of senders) {
+        app.decorateReply(sender, function (data) {
+            this.send(data)
+        })
+    }
+
+    for (var i in passportHttp) {
+        app.decorateRequest(i, passportHttp[i])
+    }
+
+    app.addHook('preHandler', passport.initialize())
+
+    return app
 }
 
 exports.padLeft = function (str, len = 4) {
