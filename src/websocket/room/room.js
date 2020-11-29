@@ -90,14 +90,35 @@ class Room extends EventEmitter {
     }
 
     remove(client) {
-        const i = this.clients.indexOf(client)
+        let idx = -1
+        let idxs = []
 
-        if (i > -1) {
-            this.clients.splice(i, 1)
-            this.send({
-                op: Opcodes.REMOVE_USER,
-                d: client.id,
-            })
+        for (let i in this.clients) {
+            const locClient = this.clients[i]
+
+            if (locClient.id === client.id) {
+                if (locClient === client) {
+                    idx = i
+
+                    if (idxs.length > 1) {
+                        break
+                    }
+                }
+
+                idxs.push(i)
+            }
+        }
+
+        if (idx > -1) {
+            this.clients.splice(idx, 1)
+
+            // user has multiple clients in the same room so we don't say that they left the room
+            if (!idxs.length > 1) {
+                this.send({
+                    op: Opcodes.REMOVE_USER,
+                    d: client.id,
+                })
+            }
 
             client.room = null
         }
@@ -106,6 +127,12 @@ class Room extends EventEmitter {
             op: Opcodes.LEAVE_ROOM,
             d: this.id,
         })
+
+        if (this.clients.length === 0) {
+            this.state.currentTime = this.getCurrentTime()
+            this.state.playing = false
+            this.state.playbackStart = null
+        }
     }
 
     getInfo() {
