@@ -1,14 +1,16 @@
-const shortid = require('shortid')
+const { customAlphabet } = require('nanoid')
 const Room = require('./room')
+
+const nanoid = customAlphabet('1234567890abcdef', 10)
 
 class RoomManager {
     constructor() {
         this.rooms = new Map()
     }
 
-    create() {
-        const id = shortid.generate()
-        const room = new Room(id)
+    create(type) {
+        const id = nanoid() // todo: make this dns compatible
+        const room = new Room(id, type)
 
         room.on('destroy', () => {
             this.rooms.delete(id)

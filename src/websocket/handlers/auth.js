@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 const Handler = require('./handler')
 const handler = new Handler()
 
-const Opcodes = require('@common/opcodes.json')
+const { Opcodes } = require('@sakuraapp/common')
 
 const User = require('~/models/user')
 const logger = require('~/utils/logger')

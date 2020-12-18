@@ -1,7 +1,8 @@
 const Handler = require('./handler')
-const Opcodes = require('@common/opcodes.json')
+const { Opcodes, RoomTypes } = require('@sakuraapp/common')
 const roomManager = require('../room/manager')
 const { getDomain, getYoutubeVideoId } = require('~/utils')
+const svcClient = require('~/service-client')
 
 const handler = new Handler()
 
@@ -11,13 +12,24 @@ handler.on(Opcodes.DISCONNECT, (data, client) => {
     }
 })
 
-handler.on(Opcodes.CREATE_ROOM, (data, client) => {
+// data is room type
+handler.on(Opcodes.CREATE_ROOM, 'number', (data, client) => {
     const room = roomManager.findByOwner(client.id)
 
     if (room) {
         room.add(client)
     } else {
-        roomManager.create().add(client)
+        const room = roomManager.create(data)
+
+        room.add(client)
+
+        if (data === 2) {
+            svcClient.call('room/deploy', {
+                id: room.id,
+                location: 'all',
+                priority: false,
+            })
+        }
     }
 })
 
@@ -139,6 +151,35 @@ handler.on(Opcodes.VIDEO_SKIP, (data, client) => {
     }
 
     client.room.queue.next(true)
+})
+
+handler.on(Opcodes.SET_ROOM_TYPE, 'number', (data, client) => {
+    if (client.room.ownerId !== client.id) {
+        return // only owner can change room type
+    }
+
+    if (!RoomTypes[data]) {
+        return
+    }
+
+    client.room.type = data
+})
+
+handler.on(Opcodes.DISPATCH_CONTROL, (data, client) => {
+    if (!client.room) {
+        return
+    }
+
+    if (!client.hasPermission('VIDEO_REMOTE')) {
+        return
+    }
+
+    svcClient
+        .call('controller/dispatch', {
+            ...data,
+            room: client.room.id,
+        })
+        .catch(console.error)
 })
 
 module.exports = handler

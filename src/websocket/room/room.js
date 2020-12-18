@@ -1,16 +1,16 @@
 const { EventEmitter } = require('events')
-const Opcodes = require('@common/opcodes.json')
-const Permissions = require('@common/permissions.json')
+const { Opcodes, Permissions } = require('@sakuraapp/common')
 const Queue = require('./queue')
 
 class Room extends EventEmitter {
-    constructor(id) {
+    constructor(id, type) {
         super()
 
         this.id = id
         this.ownerId = null
         this.ownerUsername = null
         this.private = false
+        this.type = type // 1: videosync - 2: virtual browser
 
         this.clients = []
         this.messages = []
@@ -70,6 +70,8 @@ class Room extends EventEmitter {
                     permissions: this.getPermissions(client),
                 },
             })
+
+            console.log(this.state)
 
             if (this.queue.currentItem && this.queue.currentItem.url) {
                 this.sendPlayerState(client)
@@ -131,15 +133,18 @@ class Room extends EventEmitter {
         })
 
         if (this.clients.length === 0 && this.state.playing) {
-            this.state.currentTime = this.getCurrentTime()
-            this.state.playing = false
-            this.state.playbackStart = null
+            if (this.type === 1) {
+                this.state.currentTime = this.getCurrentTime()
+                this.state.playing = false
+                this.state.playbackStart = null
+            }
         }
     }
 
     getInfo() {
         return {
             id: this.id,
+            type: this.type,
             owner: this.owner.id,
             users: this.clients.map((client) => client.profile),
             queue: this.queue.items,
@@ -168,14 +173,14 @@ class Room extends EventEmitter {
     }
 
     getCurrentTime() {
-        console.log(
-            this.state.currentTime,
-            (new Date().getTime() - this.state.playbackStart) / 1000
-        )
-        return (
-            this.state.currentTime +
-            (new Date().getTime() - this.state.playbackStart) / 1000
-        )
+        if (this.type === 1) {
+            return (
+                this.state.currentTime +
+                (new Date().getTime() - this.state.playbackStart) / 1000
+            )
+        } else {
+            return this.state.currentTime
+        }
     }
 
     getPermissions(client) {

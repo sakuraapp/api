@@ -1,6 +1,6 @@
 const logger = require('../utils/logger')
 const { v4: uuid } = require('uuid')
-const Opcodes = require('@common/opcodes.json')
+const { Opcodes } = require('@sakuraapp/common')
 
 class Client {
     constructor(socket, messageBroker) {

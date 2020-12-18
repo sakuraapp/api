@@ -11,11 +11,14 @@ const logger = require('./utils/logger')
 const routes = require('./routes')
 const websocket = require('./websocket')
 
-const port = process.env.API_PORT
+const svcClient = require('./service-client')
+
+const port = process.env.PORT
 const version = process.env.npm_package_version
 
 const { createServer } = require('./utils/index')
 
+// todo: mongodb support for kubernetes
 mongoose.Promise = Promise
 mongoose.connect('mongodb://localhost/sakura', {
     useNewUrlParser: true,
@@ -24,14 +27,17 @@ mongoose.connect('mongodb://localhost/sakura', {
 
 const fastify = createServer()
 
+fastify.decorate('svcClient', svcClient)
 fastify.register(require('fastify-helmet'))
 fastify.register(require('fastify-cors'))
 
-routes(fastify)
-websocket(fastify)
+svcClient.connect().then(() => {
+    routes(fastify)
+    websocket(fastify)
 
-console.log(`Sakura API v${version}\n`)
+    console.log(`Sakura API v${version}\n`)
 
-fastify.listen(port, () => {
-    logger.write(`Listening on port ${port}`)
+    fastify.listen(port, '0.0.0.0', () => {
+        logger.write(`Listening on port ${port}`)
+    })
 })

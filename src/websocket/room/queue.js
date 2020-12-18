@@ -1,4 +1,4 @@
-const Opcodes = require('@common/opcodes.json')
+const { Opcodes } = require('@sakuraapp/common')
 const logger = require('~/utils/logger')
 const utils = require('~/utils')
 
