@@ -2,4 +2,3 @@ node_modules/
 .DS_Store
 src/config/private.pem
 src/config/public.pem
-.env
