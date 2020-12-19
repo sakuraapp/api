@@ -1,5 +1,5 @@
 {
-  "name": "sakuraapi",
+  "name": "@sakuraapp/api",
   "version": "0.1.0",
   "description": "",
   "main": "src/server.js",
@@ -7,8 +7,20 @@
     "dev": "nodemon .",
     "start": "node ."
   },
-  "author": "",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sakuraapp/api.git"
+  },
+  "author": {
+    "name": "Ahmed El-Marakby",
+    "email": "ahmedelmarakby@hotmail.com",
+    "url": "https://pyrodash.github.io"
+  },
+  "bugs": {
+    "url": "https://github.com/sakuraapp/api/issues"
+  },
+  "homepage": "https://github.com/sakuraapp/api#readme",
+  "license": "AGPL-3.0-only",
   "dependencies": {
     "@sakuraapp/common": "^1.0.8",
     "@sakuraapp/service-client": "^1.0.1",
@@ -36,6 +48,7 @@
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.3",
+    "nodemon": "^2.0.6",
     "prettier": "^2.0.5"
   },
   "_moduleAliases": {
