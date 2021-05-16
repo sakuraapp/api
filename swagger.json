@@ -1,0 +1,403 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "Sakura",
+        "description": "A platform to consume media with other people",
+        "license": {
+            "name": "GNU AGPLv3",
+            "url": "https://opensource.org/licenses/AGPL-3.0"
+        }
+    },
+    "servers": [
+        {
+            "url": "/api/v1",
+            "description": "API"
+        }
+    ],
+    "tags": [
+        {
+            "name": "auth",
+            "description": "Authentication API"
+        },
+        {
+            "name": "user",
+            "description": "API for user operations"
+        },
+        {
+            "name": "room",
+            "description": "API for room operations"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "Response": {
+                "properties": {
+                    "status": {
+                        "type": "number",
+                        "example": 200
+                    }
+                }
+            },
+            "ObjectId": {
+                "type": "string"
+            },
+            "DiscordId": {
+                "type": "string"
+            },
+            "Profile": {
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "discriminator": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "User": {
+                "allOf": [
+                    {
+                        "properties": {
+                            "id": {
+                                "$ref": "#/components/schemas/ObjectId"
+                            },
+                            "discordId": {
+                                "$ref": "#/components/schemas/DiscordId"
+                            }
+                        }
+                    },
+                    {
+                        "$ref": "#/components/schemas/Profile"
+                    }
+                ]
+            },
+            "Token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+            },
+            "RoomId": {
+                "type": "string"
+            },
+            "QueueItem": {
+                "properties": {
+                    "id": {
+                        "type": "number"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "Room": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/RoomId"
+                    },
+                    "owner": {
+                        "type": "string",
+                        "description": "Room owner's username"
+                    },
+                    "private": {
+                        "type": "boolean",
+                        "description": "Whether or not the room is private"
+                    },
+                    "currentItem": {
+                        "$ref": "#/components/schemas/QueueItem",
+                        "nullable": true
+                    }
+                }
+            },
+            "MessageId": {
+                "type": "number"
+            }
+        },
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "parameters": {
+            "RoomId": {
+                "name": "room.id",
+                "in": "path",
+                "required": true,
+                "schema": {
+                    "$ref": "#/components/schemas/RoomId"
+                }
+            }
+        },
+        "responses": {
+            "UserFound": {
+                "description": "User found",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/components/schemas/Response"
+                                },
+                                {
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "NotAuthorized": {
+                "description": "Access token is missing or invalid",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Response"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {
+            "BearerAuth": []
+        }
+    ],
+    "paths": {
+        "/auth/discord": {
+            "get": {
+                "description": "Get a Discord OAuth2 authorization url",
+                "operationId": "getDiscordOAuth",
+                "security": [],
+                "tags": ["auth"],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "get": {
+                "description": "Callback for Discord OAuth2 login",
+                "operationId": "login",
+                "security": [],
+                "tags": ["auth"],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Discord login successful",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Response"
+                                        },
+                                        {
+                                            "properties": {
+                                                "token": {
+                                                    "$ref": "#/components/schemas/Token"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{user.id}": {
+            "get": {
+                "description": "Get a user by their id",
+                "operationId": "getUserById",
+                "tags": ["user"],
+                "parameters": [
+                    {
+                        "name": "user.id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/ObjectId"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/UserFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/NotAuthorized"
+                    },
+                    "403": {
+                        "description": "Not allowed, will return when trying to retrieve a user other than the logged in user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "content": {
+                            "$ref": "#/components/schemas/Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/@me": {
+            "get": {
+                "description": "Get current authenticated user",
+                "operationId": "getMyUser",
+                "tags": ["user"],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/UserFound"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/NotAuthorized"
+                    }
+                }
+            }
+        },
+        "/rooms/{room.id}": {
+            "get": {
+                "description": "Get a room by id",
+                "operationId": "getRoomById",
+                "tags": ["room"],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RoomId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Room found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Response"
+                                        },
+                                        {
+                                            "properties": {
+                                                "room": {
+                                                    "$ref": "#/components/schemas/Room"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/NotAuthorized"
+                    },
+                    "403": {
+                        "description": "User is not a member of the room",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Room not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/rooms/{room.id}/messages": {
+            "post": {
+                "description": "Send a message to a room",
+                "operationId": "sendMessage",
+                "tags": ["room"],
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/RoomId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/Response"
+                                        },
+                                        {
+                                            "properties": {
+                                                "id": {
+                                                    "$ref": "#/components/schemas/MessageId"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/NotAuthorized"
+                    },
+                    "404": {
+                        "description": "Room not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Response"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
