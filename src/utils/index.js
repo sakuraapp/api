@@ -6,10 +6,6 @@ const got = require('got')
 const cheerio = require('cheerio')
 const URL = require('url')
 
-const favicons = {
-    'crunchyroll.com': 'https://www.crunchyroll.com/favicons/favicon-32x32.png',
-}
-
 exports.isDev = () => process.env.NODE_ENV !== 'production'
 
 exports.createServer = () => {
@@ -59,7 +55,12 @@ exports.getSiteInfo = async (url) => {
     let title
 
     try {
-        const res = await got(url)
+        const res = await got(url, {
+            headers: {
+                'user-agent':
+                    'APIs-Google (+https://developers.google.com/webmasters/APIs-Google.html)', // there's also Twitterbot/1.0 and facebookexternalhit
+            },
+        })
         const $ = cheerio.load(res.body)
 
         const getElement = (selector) => {
@@ -95,7 +96,6 @@ exports.getSiteInfo = async (url) => {
             title = $('title').text().trim()
         }
     } catch (err) {
-        favicon = favicons[domain]
         title = domain
     }
 
