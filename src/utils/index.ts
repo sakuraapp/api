@@ -1,10 +1,27 @@
-import { FastifyInstance } from 'fastify'
+import fastify, { FastifyInstance } from 'fastify'
 import passport from 'passport'
 import passportHttp from 'passport/lib/http/request'
 import { MiddlewareFn } from '~/middlewares/middleware.middleware'
 
 export function padLeft(str: string, len = 4): string {
     return Array(len - str.length + 1).join('0') + str
+}
+
+export function createServer(): FastifyInstance {
+    let server: FastifyInstance
+
+    if (Number(process.env.USE_SSL)) {
+        server = fastify({
+            https: {
+                cert: process.env.SSL_CERT,
+                key: process.env.SSL_KEY,
+            },
+        })
+    } else {
+        server = fastify({})
+    }
+
+    return server
 }
 
 // passport support for fastify

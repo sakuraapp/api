@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance } from 'fastify'
+import { FastifyInstance } from 'fastify'
 import { IncomingMessage, Server, ServerResponse } from 'http'
 import helmet from 'fastify-helmet'
 import cors from 'fastify-cors'
@@ -7,7 +7,7 @@ import { Service, Inject } from 'typedi'
 import Database from './database'
 import { ServiceManager } from './managers/service.manager'
 import { logger } from './utils/logger'
-import { passportCompatiblity } from './utils'
+import { createServer, passportCompatiblity } from './utils'
 import AuthController from './controllers/auth.controller'
 import UserController from './controllers/user.controller'
 import RoomController from './controllers/room.controller'
@@ -41,13 +41,14 @@ export default class App {
         this.serviceManager.init()
         await this.database.init()
 
-        this.server = fastify({})
+        this.server = createServer()
 
         this.server.register(helmet)
         this.server.register(cors)
 
         this.server.register(bootstrap, {
             controllers: [AuthController, UserController, RoomController],
+            prefix: '/api/v1',
         })
 
         this.server.setErrorHandler((err, request, reply) => {
