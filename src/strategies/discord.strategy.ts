@@ -45,7 +45,7 @@ export class DiscordStrategy extends OAuth2Strategy<Profile> {
             response_type: 'code',
             client_id: this.clientId,
             scope: this.scopesRaw,
-            redirect_uri: process.env.DISCORD_REDIRECT_URI,
+            redirect_uri: this.redirectUri,
         }
 
         return `${this.oauthUrl}?${querystring.stringify(opts)}`

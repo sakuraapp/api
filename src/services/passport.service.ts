@@ -25,7 +25,7 @@ export class PassportService {
     }
 
     init(): void {
-        const { strategies } = this.strategyManager
+        const { strategies } = this
 
         for (const strat of strategies) {
             passport.use(strat.strategy)

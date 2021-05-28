@@ -1,5 +1,12 @@
-import { Entity, Enum, OneToOne, PrimaryKey, Property } from '@mikro-orm/core'
-import { ObjectId } from '@mikro-orm/mongodb'
+import {
+    Entity,
+    EntityRepositoryType,
+    Enum,
+    OneToOne,
+    PrimaryKey,
+    Property,
+} from '@mikro-orm/core'
+import { BaseRepository } from '../repositories/base.repository'
 import { User } from './user.entity'
 
 export enum RoomType {
@@ -9,11 +16,10 @@ export enum RoomType {
 
 @Entity({ collection: 'rooms' })
 export class Room {
-    @PrimaryKey()
-    _id: ObjectId
+    [EntityRepositoryType]?: BaseRepository<Room>
 
-    @Property()
-    id: string
+    @PrimaryKey()
+    _id: string
 
     @Property()
     name: string

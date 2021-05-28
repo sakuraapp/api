@@ -18,8 +18,8 @@ export class StrategyManager {
     getOAuth2<T extends IOAuth2Strategy>(id: string): T | null {
         const strat = this.get<T>(id)
 
-        if (strat) {
-            return strat.isOAuth2 ? strat : null
+        if (strat && strat.isOAuth2) {
+            return strat
         }
     }
 }

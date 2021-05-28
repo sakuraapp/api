@@ -28,6 +28,8 @@ export function authenticate({
 
         if (strategy) {
             strategy.authenticate(req, res, next)
+        } else {
+            res.status(404).send({ messaage: 'Provider not found' })
         }
     }
 }
