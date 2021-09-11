@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import { authenticate } from '~/middlewares/auth.middleware'
 import { StrategyManager } from '~/managers/strategy.manager'
 
-@Controller({ route: '/oauth2' })
+@Controller({ route: '/auth' })
 export default class AuthController {
     private strategyManager = Container.get(StrategyManager)
 

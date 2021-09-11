@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from 'fastify'
 import { Controller, GET } from 'fastify-decorators'
 import { Container } from 'typedi'
 import Database from '~/database'
+import { UserHelper } from '~/helpers/user.helper'
 import { PassportService } from '~/services/passport.service'
 import SessionController from './session.controller'
 
@@ -18,7 +19,7 @@ export default class UserController extends SessionController {
         const { user } = request
 
         if (user.credentials.providerId && user.credentials.accessToken) {
-            const profile = await this.passport.fetchProfile(user)
+            const profile = await this.passport.getProfile(user)
 
             if (profile.avatar !== user.profile.avatar) {
                 user.profile.avatar = profile.avatar
@@ -28,10 +29,7 @@ export default class UserController extends SessionController {
         }
 
         reply.send({
-            user: {
-                id: user.id,
-                ...user.profile,
-            },
+            user: UserHelper.build(user),
         })
     }
 }

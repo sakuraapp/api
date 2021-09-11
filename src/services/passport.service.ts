@@ -3,10 +3,11 @@ import passport from 'passport'
 import OAuth2Strategy from 'passport-oauth2'
 import refresh from 'passport-oauth2-refresh'
 import { Inject, Service } from 'typedi'
-import { User } from '~/database/entities/user.entity'
+import { User } from '@sakuraapp/shared'
 import { StrategyManager } from '~/managers/strategy.manager'
-import { IProfile } from '~/strategies/oauth2.strategy'
+import { IOAuth2Strategy, IProfile } from '~/strategies/oauth2.strategy'
 import { IStrategy } from '~/strategies/strategy.strategy'
+import Database from '~/database'
 
 const cacheOptions: Options<string, IProfile> = {
     max: 500, // 500 users
@@ -19,6 +20,9 @@ export class PassportService {
 
     @Inject()
     private strategyManager: StrategyManager
+
+    @Inject()
+    private database: Database
 
     get strategies(): IStrategy[] {
         return this.strategyManager.strategies
@@ -36,7 +40,46 @@ export class PassportService {
         }
     }
 
-    async fetchProfile(user: User): Promise<IProfile> {
+    public refresh(user: User, strat: IOAuth2Strategy): Promise<void> {
+        return new Promise((resolve, reject) => {
+            refresh.requestNewAccessToken(
+                strat.strategy.name,
+                user.credentials.refreshToken,
+                (err, accessToken, refreshToken) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        user.credentials.accessToken = accessToken
+                        user.credentials.refreshToken = refreshToken
+
+                        this.database.orm.em.flush().then(resolve).catch(reject)
+                    }
+                }
+            )
+        })
+    }
+
+    async fetchProfile(user: User, strat: IOAuth2Strategy): Promise<IProfile> {
+        const { accessToken, refreshToken } = user.credentials
+
+        let profile: IProfile
+
+        try {
+            profile = await strat.userProfile(accessToken)
+        } catch (err) {
+            if (refreshToken) {
+                await this.refresh(user, strat)
+
+                profile = await this.fetchProfile(user, strat)
+            } else {
+                throw err
+            }
+        }
+
+        return profile
+    }
+
+    async getProfile(user: User): Promise<IProfile> {
         const { userId, providerId, accessToken } = user.credentials
         const strat = this.strategyManager.getOAuth2(providerId)
 
@@ -51,7 +94,7 @@ export class PassportService {
             return cached
         }
 
-        const profile = await strat.userProfile(accessToken)
+        const profile = await this.fetchProfile(user, strat)
 
         this.cache.set(cacheKey, profile)
 

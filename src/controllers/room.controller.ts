@@ -3,11 +3,32 @@ import { Controller, GET, POST } from 'fastify-decorators'
 import { nanoid } from 'nanoid'
 import { Container } from 'typedi'
 import Database from '~/database'
+import { RoomHelper } from '~/helpers/room.helper'
 import SessionController from './session.controller'
 
 @Controller({ route: '/rooms' })
 export default class RoomController extends SessionController {
     private database = Container.get(Database)
+
+    @GET('/latest')
+    async getLatestRooms(
+        request: FastifyRequest,
+        reply: FastifyReply
+    ): Promise<void> {
+        const rooms = await this.database.room.find(
+            {},
+            {
+                limit: 5,
+                orderBy: { age: 'desc' },
+            }
+        )
+
+        reply.send({
+            rooms: rooms.map((room) => {
+                return RoomHelper.build(room)
+            }),
+        })
+    }
 
     @GET('/:roomId')
     async getRoom(request: FastifyRequest, reply: FastifyReply): Promise<void> {

@@ -1,6 +1,6 @@
 import PassportOAuth2Strategy from 'passport-oauth2'
 import { IStrategy, Strategy } from './strategy.strategy'
-import { User } from '~/database/entities/user.entity'
+import { User } from '@sakuraapp/shared'
 
 // Abstract Profile
 export interface IProfile {

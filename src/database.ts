@@ -1,13 +1,17 @@
-import { MikroORM } from '@mikro-orm/core'
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
-import { BaseRepository } from './repositories/base.repository'
-import { NameRepository } from './repositories/name.repository'
-import { Discriminator } from './entities/discriminator.entity'
-import { Name } from './entities/name.entity'
-import { User, Credentials, Profile } from './entities/user.entity'
 import { Service } from 'typedi'
 import { logger } from '~/utils/logger'
-import { Room } from './entities/room.entity'
+import {
+    createDatabase,
+    MikroORM,
+    BaseRepository,
+    NameRepository,
+    Discriminator,
+    Name,
+    User,
+    Credentials,
+    Profile,
+    Room,
+} from '@sakuraapp/shared'
 
 @Service()
 export default class Database {
@@ -19,18 +23,15 @@ export default class Database {
     public room: BaseRepository<Room>
 
     async connect(): Promise<void> {
-        this.orm = await MikroORM.init({
+        this.orm = await createDatabase({
             entities: [User, Credentials, Profile, Name, Discriminator, Room],
-            entityRepository: BaseRepository,
             dbName: 'sakura',
-            type: 'mongo',
             host: process.env.DB_HOST || '127.0.0.1',
             port: Number(process.env.DB_PORT) || 27017,
-            metadataProvider: TsMorphMetadataProvider,
             validate: true,
         })
 
-        logger.info('Connected to database')
+        logger.info('Connected to the database')
     }
 
     async init(): Promise<void> {

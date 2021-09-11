@@ -42,9 +42,6 @@
             "ObjectId": {
                 "type": "string"
             },
-            "DiscordId": {
-                "type": "string"
-            },
             "Profile": {
                 "properties": {
                     "username": {
@@ -65,9 +62,6 @@
                         "properties": {
                             "id": {
                                 "$ref": "#/components/schemas/ObjectId"
-                            },
-                            "discordId": {
-                                "$ref": "#/components/schemas/DiscordId"
                             }
                         }
                     },
@@ -196,7 +190,7 @@
                 }
             }
         },
-        "/auth/login": {
+        "/auth/discord/login": {
             "get": {
                 "description": "Callback for Discord OAuth2 login",
                 "operationId": "login",
@@ -258,16 +252,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/NotAuthorized"
-                    },
-                    "403": {
-                        "description": "Not allowed, will return when trying to retrieve a user other than the logged in user",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Response"
-                                }
-                            }
-                        }
                     },
                     "404": {
                         "description": "User not found",

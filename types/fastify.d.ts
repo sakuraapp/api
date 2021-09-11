@@ -1,4 +1,4 @@
-import { User } from '~/database/entities/user.entity'
+import { User } from '@sakuraapp/shared'
 
 declare module 'fastify' {
     export interface FastifyRequest {
