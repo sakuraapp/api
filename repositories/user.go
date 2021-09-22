@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"github.com/go-pg/pg/v10"
-	"github.com/sakuraapp/api/models"
+	"github.com/sakuraapp/shared/models"
 )
 
 type UserRepository struct {

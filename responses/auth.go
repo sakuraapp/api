@@ -1,6 +1,8 @@
-package resources
+package responses
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type AuthResponse struct {
 	Response

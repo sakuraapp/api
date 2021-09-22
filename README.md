@@ -20,5 +20,5 @@ DISCORD_REDIRECT="http://website url/auth/discord/callback"
 ## Usage
 To run in a development environment:
 ```
-go run main.gos
+go run main.go
 ```

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/go-chi/render"
 	"github.com/sakuraapp/api/middlewares"
-	"github.com/sakuraapp/api/resources"
+	"github.com/sakuraapp/api/responses"
+	"github.com/sakuraapp/shared/resources"
 	"net/http"
 )
 
@@ -14,7 +15,7 @@ type UserController struct {
 
 func (c *UserController) GetMyUser(w http.ResponseWriter, r *http.Request) {
 	user := middlewares.FromContext(r.Context())
-	userResource := resources.NewUserResponse(resources.NewUser(user))
+	userResource := responses.NewUserResponse(resources.NewUser(user))
 
 	fmt.Printf("%+v", userResource)
 	render.Render(w, r, userResource)

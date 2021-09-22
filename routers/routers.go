@@ -22,17 +22,6 @@ func Init(a internal.App) *chi.Mux {
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
-	/* r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-
-			if r.Method == "OPTIONS" {
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Cache-Control") // You can add more headers here if needed
-			} else {
-				next.ServeHTTP(w, r)
-			}
-		})
-	}) */
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -40,7 +29,7 @@ func Init(a internal.App) *chi.Mux {
 
 	c := controllers.Init(a)
 
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Route("/v1", func(r chi.Router) {
 		// authentication routes
 		r.Route("/auth/{provider}", func(r chi.Router) {
 			r.Get("/", c.Auth.BeginAuth)

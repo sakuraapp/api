@@ -3,7 +3,7 @@ package repositories
 import (
 	"fmt"
 	"github.com/go-pg/pg/v10"
-	"github.com/sakuraapp/api/models"
+	"github.com/sakuraapp/shared/models"
 	"strconv"
 )
 

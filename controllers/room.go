@@ -5,8 +5,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/sakuraapp/api/middlewares"
-	"github.com/sakuraapp/api/models"
-	"github.com/sakuraapp/api/resources"
+	"github.com/sakuraapp/api/responses"
+	"github.com/sakuraapp/shared/models"
+	"github.com/sakuraapp/shared/resources"
 	"net/http"
 	"strconv"
 )
@@ -20,17 +21,17 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 	roomId, err := strconv.ParseInt(strRoomId, 10, 64)
 
 	if err != nil {
-		render.Render(w, r, resources.ErrBadRequest)
+		render.Render(w, r, responses.ErrBadRequest)
 		return
 	}
 
 	room, err := c.app.GetRepositories().Room.Get(roomId)
 
 	if err != nil {
-		render.Render(w, r, resources.ErrInternalError)
+		render.Render(w, r, responses.ErrInternalError)
 	}
 
-	response := resources.NewRoomResponse(resources.NewRoom(room))
+	response := responses.NewRoomResponse(resources.NewRoom(room))
 	render.Render(w, r, response)
 }
 
@@ -38,11 +39,11 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 	rooms, err := c.app.GetRepositories().Room.GetLatest()
 
 	if err != nil {
-		render.Render(w, r, resources.ErrInternalError)
+		render.Render(w, r, responses.ErrInternalError)
 		return
 	}
 
-	response := resources.NewRoomListResponse(resources.NewRoomList(rooms))
+	response := responses.NewRoomListResponse(resources.NewRoomList(rooms))
 	render.Render(w, r, response)
 }
 
@@ -53,7 +54,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 	room, err := roomRepo.GetByOwnerId(user.Id)
 
 	if err != nil {
-		render.Render(w, r, resources.ErrInternalError)
+		render.Render(w, r, responses.ErrInternalError)
 		return
 	}
 
@@ -67,11 +68,11 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 		err = roomRepo.Create(room)
 
 		if err != nil {
-			render.Render(w, r, resources.ErrInternalError)
+			render.Render(w, r, responses.ErrInternalError)
 			return
 		}
 	}
 
-	response := resources.NewRoomResponse(resources.NewRoom(room))
+	response := responses.NewRoomResponse(resources.NewRoom(room))
 	render.Render(w, r, response)
 }

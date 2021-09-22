@@ -1,4 +1,4 @@
-package resources
+package responses
 
 import (
 	"github.com/go-chi/render"

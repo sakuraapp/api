@@ -11,6 +11,7 @@ import (
 	"github.com/sakuraapp/api/internal/utils"
 	"github.com/sakuraapp/api/repositories"
 	"github.com/sakuraapp/api/routers"
+	"github.com/sakuraapp/shared"
 	"log"
 	"net/http"
 	"os"
@@ -53,8 +54,8 @@ func Start(port string) App {
 	jwtPrivatePath := os.Getenv("JWT_PRIVATE_KEY")
 	jwtPassphrase := os.Getenv("JWT_PASSPHRASE")
 
-	jwtPrivateKey := utils.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
-	jwtPublicKey := utils.LoadRSAPublicKey(jwtPublicPath)
+	jwtPrivateKey := shared.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
+	jwtPublicKey := shared.LoadRSAPublicKey(jwtPublicPath)
 
 	jwtAuth := jwtauth.New("RS256", jwtPrivateKey, jwtPublicKey)
 

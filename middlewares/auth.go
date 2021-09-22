@@ -7,15 +7,15 @@ import (
 	"github.com/go-chi/render"
 	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/models"
-	"github.com/sakuraapp/api/resources"
+	"github.com/sakuraapp/api/responses"
+	"github.com/sakuraapp/shared/models"
 	"net/http"
 )
 
 const UserCtxKey = "user"
 
 func SendUnauthorized(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, resources.ErrUnauthorized)
+	render.Render(w, r, responses.ErrUnauthorized)
 	return
 }
 
