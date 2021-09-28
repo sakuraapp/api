@@ -8,7 +8,7 @@ import (
 	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/sakuraapp/api/internal"
 	"github.com/sakuraapp/api/responses"
-	"github.com/sakuraapp/shared/models"
+	"github.com/sakuraapp/shared/model"
 	"net/http"
 )
 
@@ -19,8 +19,8 @@ func SendUnauthorized(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func FromContext(ctx context.Context) *models.User {
-	user, _ := ctx.Value(UserCtxKey).(*models.User)
+func FromContext(ctx context.Context) *model.User {
+	user, _ := ctx.Value(UserCtxKey).(*model.User)
 
 	return user
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/sakuraapp/api/internal/utils"
 	"github.com/sakuraapp/api/repositories"
 	"github.com/sakuraapp/api/routers"
-	"github.com/sakuraapp/shared"
+	shared "github.com/sakuraapp/shared/pkg"
 	"log"
 	"net/http"
 	"os"

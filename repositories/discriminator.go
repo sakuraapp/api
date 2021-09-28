@@ -3,7 +3,7 @@ package repositories
 import (
 	"fmt"
 	"github.com/go-pg/pg/v10"
-	"github.com/sakuraapp/shared/models"
+	"github.com/sakuraapp/shared/model"
 	"strconv"
 )
 
@@ -17,7 +17,7 @@ type DiscriminatorRepository struct {
 func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
 	var discrim string
 
-	prev := new(models.Discriminator)
+	prev := new(model.Discriminator)
 	err := r.db.Model(prev).
 		Column("value").
 		Where("name = ?", name).
@@ -45,7 +45,7 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
 		return &discrim, err
 	}
 
-	available := new(models.Discriminator)
+	available := new(model.Discriminator)
 	err = r.db.Model(available).
 		Column("value").
 		Where("owner_id = NULL").
@@ -62,7 +62,7 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
 	return &available.Value, nil
 }
 
-func (r *DiscriminatorRepository) Create(discrim *models.Discriminator) error {
+func (r *DiscriminatorRepository) Create(discrim *model.Discriminator) error {
 	_, err := r.db.Model(discrim).Insert()
 
 	return err

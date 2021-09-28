@@ -2,15 +2,15 @@ package repositories
 
 import (
 	"github.com/go-pg/pg/v10"
-	"github.com/sakuraapp/shared/models"
+	"github.com/sakuraapp/shared/model"
 )
 
 type RoomRepository struct {
 	db *pg.DB
 }
 
-func (r *RoomRepository) Get(id int64) (*models.Room, error) {
-	room := new(models.Room)
+func (r *RoomRepository) Get(id int64) (*model.Room, error) {
+	room := new(model.Room)
 	err := r.db.Model(&room).
 		Relation("Owner").
 		Where("id = ?", id).
@@ -24,8 +24,8 @@ func (r *RoomRepository) Get(id int64) (*models.Room, error) {
 	return room, err
 }
 
-func (r *RoomRepository) GetLatest() ([]models.Room, error) {
-	var rooms []models.Room
+func (r *RoomRepository) GetLatest() ([]model.Room, error) {
+	var rooms []model.Room
 
 	err := r.db.Model(&rooms).
 		Relation("Owner").
@@ -36,14 +36,14 @@ func (r *RoomRepository) GetLatest() ([]models.Room, error) {
 
 	if err == pg.ErrNoRows {
 		err = nil
-		rooms = []models.Room{}
+		rooms = []model.Room{}
 	}
 
 	return rooms, err
 }
 
-func (r *RoomRepository) GetByOwnerId(id int64) (*models.Room, error) {
-	room := new(models.Room)
+func (r *RoomRepository) GetByOwnerId(id int64) (*model.Room, error) {
+	room := new(model.Room)
 	err := r.db.Model(room).
 		Where("owner_id = ?", id).
 		First()
@@ -56,7 +56,7 @@ func (r *RoomRepository) GetByOwnerId(id int64) (*models.Room, error) {
 	return room, err
 }
 
-func (r *RoomRepository) Create(room *models.Room) error {
+func (r *RoomRepository) Create(room *model.Room) error {
 	_, err := r.db.Model(room).Insert()
 
 	return err

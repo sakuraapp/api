@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/markbates/goth/gothic"
 	"github.com/sakuraapp/api/responses"
-	models2 "github.com/sakuraapp/shared/models"
+	"github.com/sakuraapp/shared/model"
 	"gopkg.in/guregu/null.v4"
 	"net/http"
 )
@@ -65,7 +65,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user = &models2.User{
+		user = &model.User{
 			Username: name,
 			Avatar: avatar,
 			Provider: extUser.Provider,
@@ -83,7 +83,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		discriminator := &models2.Discriminator{
+		discriminator := &model.Discriminator{
 			Name: name,
 			Value: *discrim,
 			OwnerId: user.Id,

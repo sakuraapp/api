@@ -2,13 +2,13 @@ package responses
 
 import (
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/shared/resources"
+	"github.com/sakuraapp/shared/resource"
 	"net/http"
 )
 
 type UserResponse struct {
 	Response
-	User *resources.User `json:"user,omitempty"`
+	User *resource.User `json:"user,omitempty"`
 }
 
 func (res *UserResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -17,7 +17,7 @@ func (res *UserResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewUserResponse(user *resources.User) *UserResponse {
+func NewUserResponse(user *resource.User) *UserResponse {
 	var status int
 
 	if user != nil {

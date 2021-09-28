@@ -13,6 +13,6 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lestrrat-go/jwx v1.2.6
 	github.com/markbates/goth v1.68.0
-	github.com/sakuraapp/shared v0.0.0-20210922183354-c5902d23bd6d // indirect
+	github.com/sakuraapp/shared v0.0.0-20210928153540-7da298702678 // indirect
 	gopkg.in/guregu/null.v4 v4.0.0
 )
