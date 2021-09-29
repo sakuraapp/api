@@ -44,7 +44,7 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 
 			rawId, _ := token.Get("id")
 			floatId, _ := rawId.(float64)
-			id := int64(floatId)
+			id := model.UserId(floatId)
 
 			if id == 0 {
 				fmt.Printf("not valid %v\n", id)

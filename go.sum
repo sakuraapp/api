@@ -200,6 +200,16 @@ github.com/sakuraapp/shared v0.0.0-20210922183354-c5902d23bd6d h1:sL8HFTQMcSJn9h
 github.com/sakuraapp/shared v0.0.0-20210922183354-c5902d23bd6d/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
 github.com/sakuraapp/shared v0.0.0-20210928153540-7da298702678 h1:5JvANbYvIVgPQSbzzVcGrFoCbJdKZvDLRR0YeLlWUYo=
 github.com/sakuraapp/shared v0.0.0-20210928153540-7da298702678/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
+github.com/sakuraapp/shared v0.0.0-20210928161611-a2e7c8a704f7 h1:EdC2peeKpI5ejhJa+Di4iYtqCiN6xOu3g8ql2Ccoo4M=
+github.com/sakuraapp/shared v0.0.0-20210928161611-a2e7c8a704f7/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
+github.com/sakuraapp/shared v0.0.0-20210928162944-df643a5b9701 h1:7UZz0aA48ux9R9LrCGooqayrNuuNUVLATNIdbqB34OM=
+github.com/sakuraapp/shared v0.0.0-20210928162944-df643a5b9701/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
+github.com/sakuraapp/shared v0.0.0-20210928163319-05d2619fb43c h1:jSf0WDnM6HN6ROuGi/BePyOAHHy5Tjs5VJcjegqOT3Q=
+github.com/sakuraapp/shared v0.0.0-20210928163319-05d2619fb43c/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
+github.com/sakuraapp/shared v0.0.0-20210929035124-82d103146982 h1:qATnzTUxz4gNt1K6loINMMIjrcaN79cs2LdvNR7zdhw=
+github.com/sakuraapp/shared v0.0.0-20210929035124-82d103146982/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
+github.com/sakuraapp/shared v0.0.0-20210929035628-4240c81a4f8e h1:3znGiWQ1/kCSy0UawXcQjEwBzIWiy/3oG5LUu+LR6ts=
+github.com/sakuraapp/shared v0.0.0-20210929035628-4240c81a4f8e/go.mod h1:k4P28es6kIk9RvLxnmkwUzRTVHMX1y8t0GoXb7CE2Y4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=

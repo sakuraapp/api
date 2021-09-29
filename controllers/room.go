@@ -25,7 +25,7 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	room, err := c.app.GetRepositories().Room.Get(roomId)
+	room, err := c.app.GetRepositories().Room.Get(model.RoomId(roomId))
 
 	if err != nil {
 		render.Render(w, r, responses.ErrInternalError)

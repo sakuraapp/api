@@ -9,7 +9,7 @@ type UserRepository struct {
 	db *pg.DB
 }
 
-func (r *UserRepository) GetWithDiscriminator(id int64) (*model.User, error) {
+func (r *UserRepository) GetWithDiscriminator(id model.UserId) (*model.User, error) {
 	user := new(model.User)
 	err := r.db.Model(user).
 		Column("user.*").

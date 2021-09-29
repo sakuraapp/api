@@ -9,7 +9,7 @@ type RoomRepository struct {
 	db *pg.DB
 }
 
-func (r *RoomRepository) Get(id int64) (*model.Room, error) {
+func (r *RoomRepository) Get(id model.RoomId) (*model.Room, error) {
 	room := new(model.Room)
 	err := r.db.Model(&room).
 		Relation("Owner").
@@ -42,7 +42,7 @@ func (r *RoomRepository) GetLatest() ([]model.Room, error) {
 	return rooms, err
 }
 
-func (r *RoomRepository) GetByOwnerId(id int64) (*model.Room, error) {
+func (r *RoomRepository) GetByOwnerId(id model.UserId) (*model.Room, error) {
 	room := new(model.Room)
 	err := r.db.Model(room).
 		Where("owner_id = ?", id).
