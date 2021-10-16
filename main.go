@@ -2,9 +2,15 @@ package main
 
 import (
 	"github.com/joho/godotenv"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/discord"
 	"github.com/sakuraapp/api/server"
+	"github.com/sakuraapp/api/config"
+	shared "github.com/sakuraapp/shared/pkg"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -20,5 +26,40 @@ func main() {
 		port = "4000"
 	}
 
-	server.Start(port)
+	goth.UseProviders(
+		discord.New(
+			os.Getenv("DISCORD_KEY"),
+			os.Getenv("DISCORD_SECRET"),
+			os.Getenv("DISCORD_REDIRECT"),
+			GetScopes("DISCORD_SCOPES")...
+		),
+	)
+
+	jwtPublicPath := os.Getenv("JWT_PUBLIC_KEY")
+	jwtPrivatePath := os.Getenv("JWT_PRIVATE_KEY")
+	jwtPassphrase := os.Getenv("JWT_PASSPHRASE")
+
+	jwtPrivateKey := shared.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
+	jwtPublicKey := shared.LoadRSAPublicKey(jwtPublicPath)
+
+	redisAddr := os.Getenv("REDIS_ADDR")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisDatabase := os.Getenv("REDIS_DATABASE")
+	redisDb, err := strconv.Atoi(redisDatabase)
+
+	server.Create(config.Config{
+		Port: port,
+		JWTPrivateKey: jwtPrivateKey,
+		JWTPublicKey: jwtPublicKey,
+		DatabaseUser: os.Getenv("DB_USER"),
+		DatabasePassword: os.Getenv("DB_PASSWORD"),
+		DatabaseName: os.Getenv("DB_DATABASE"),
+		RedisAddr: redisAddr,
+		RedisPassword: redisPassword,
+		RedisDatabase: redisDb,
+	})
+}
+
+func GetScopes(key string) []string {
+	return strings.Split(os.Getenv(key), ", ")
 }

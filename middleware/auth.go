@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/response"
+	"github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/model"
 	"net/http"
 )
@@ -15,7 +15,7 @@ import (
 const UserCtxKey = "user"
 
 func SendUnauthorized(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, response.ErrUnauthorized)
+	render.Render(w, r, resource.ErrUnauthorized)
 	return
 }
 
@@ -30,7 +30,8 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token, _, err := jwtauth.FromContext(r.Context())
+			reqCtx := r.Context()
+			token, _, err := jwtauth.FromContext(reqCtx)
 
 			if err != nil {
 				SendUnauthorized(w, r)
@@ -52,7 +53,7 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 				return
 			}
 
-			user, err := userRepo.GetWithDiscriminator(id)
+			user, err := userRepo.GetWithDiscriminator(reqCtx, id)
 
 			if user == nil || err != nil {
 				if err != nil {
@@ -63,7 +64,7 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), UserCtxKey, user)
+			ctx := context.WithValue(reqCtx, UserCtxKey, user)
 			r = r.WithContext(ctx)
 
 			// Token is authenticated, pass it through

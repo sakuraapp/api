@@ -17,7 +17,7 @@ func NewRouter(a internal.App) *chi.Mux {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Cache-Control"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Cache-Control", "X-Session-Id"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
@@ -47,8 +47,10 @@ func NewRouter(a internal.App) *chi.Mux {
 			// room routes
 			r.Route("/rooms", func(r chi.Router) {
 				r.Post("/", c.Room.Create)
-				r.Get("/{roomId}", c.Room.Get)
 				r.Get("/latest", c.Room.GetLatest)
+
+				r.Get("/{roomId}", c.Room.Get)
+				r.Post("/{roomId}/messages", c.Room.SendMessage)
 			})
 		})
 	})

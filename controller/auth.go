@@ -5,7 +5,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/markbates/goth/gothic"
-	"github.com/sakuraapp/api/response"
+	"github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/model"
 	"gopkg.in/guregu/null.v4"
 	"net/http"
@@ -36,7 +36,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// todo: handle this error?
 		fmt.Printf("%v", err.Error())
-		render.Render(w, r, response.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if discrim == nil {
-			render.Render(w, r, response.ErrTooManyUsers)
+			render.Render(w, r, resource.ErrTooManyUsers)
 			return
 		}
 
@@ -122,6 +122,6 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := response.NewAuthResponse(&t)
-	render.Render(w, r, response)
+	res := resource.NewAuthResponse(&t)
+	render.Render(w, r, res)
 }

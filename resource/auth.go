@@ -1,4 +1,4 @@
-package response
+package resource
 
 import (
 	"net/http"

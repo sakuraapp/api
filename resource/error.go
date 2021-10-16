@@ -1,4 +1,4 @@
-package response
+package resource
 
 import (
 	"github.com/go-chi/render"
@@ -30,3 +30,4 @@ func NewErrorMessage(message string) *string {
 var ErrBadRequest = NewError(http.StatusBadRequest, nil)
 var ErrInternalError = NewError(http.StatusInternalServerError, nil)
 var ErrUnauthorized = NewError(http.StatusUnauthorized, nil)
+var ErrForbidden = NewError(http.StatusForbidden, nil)

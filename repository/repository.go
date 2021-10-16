@@ -1,6 +1,9 @@
 package repository
 
-import "github.com/go-pg/pg/v10"
+import (
+	"github.com/go-pg/pg/v10"
+	"github.com/go-redis/cache/v8"
+)
 
 type Repositories struct {
 	User UserRepository
@@ -8,10 +11,10 @@ type Repositories struct {
 	Room RoomRepository
 }
 
-func Init(db *pg.DB) Repositories {
+func Init(db *pg.DB, cache *cache.Cache) Repositories {
 	return Repositories{
-		UserRepository{db},
-		DiscriminatorRepository{db},
-		RoomRepository{db},
+		User: UserRepository{db: db, cache: cache},
+		Discriminator: DiscriminatorRepository{db: db},
+		Room: RoomRepository{db: db},
 	}
 }

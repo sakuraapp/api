@@ -5,63 +5,51 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-pg/pg/extra/pgdebug"
 	"github.com/go-pg/pg/v10"
-	"github.com/markbates/goth"
+	"github.com/go-redis/cache/v8"
+	"github.com/go-redis/redis/v8"
 	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/discord"
+	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/internal/utils"
 	"github.com/sakuraapp/api/repository"
-	shared "github.com/sakuraapp/shared/pkg"
 	"log"
 	"net/http"
-	"os"
-	"strings"
+	"time"
 )
 
-type App struct {
-	DB *pg.DB
-	Repositories *repository.Repositories
-	JWT *jwtauth.JWTAuth
+type Server struct {
+	db *pg.DB
+	repos *repository.Repositories
+	jwt *jwtauth.JWTAuth
+	rdb *redis.Client
 }
 
-func (a *App) GetDB() *pg.DB {
-	return a.DB
+func (s *Server) GetDB() *pg.DB {
+	return s.db
 }
 
-func (a *App) GetRepositories() *repository.Repositories {
-	return a.Repositories
+func (s *Server) GetRepositories() *repository.Repositories {
+	return s.repos
 }
 
-func (a *App) GetJWT() *jwtauth.JWTAuth {
-	return a.JWT
+func (s *Server) GetJWT() *jwtauth.JWTAuth {
+	return s.jwt
 }
 
-func Start(port string) App {
-	goth.UseProviders(
-		discord.New(
-			os.Getenv("DISCORD_KEY"),
-			os.Getenv("DISCORD_SECRET"),
-			os.Getenv("DISCORD_REDIRECT"),
-			GetScopes("DISCORD_SCOPES")...
-		),
-	)
+func (s *Server) GetRedis() *redis.Client {
+	return s.rdb
+}
 
+func Create(conf config.Config) Server {
 	// use a fake store because this is a REST API, it's not vulnerable to CSRF anyway
 	// todo: re-evaluate this decision
 	gothic.Store = utils.NewFakeStore()
 
-	jwtPublicPath := os.Getenv("JWT_PUBLIC_KEY")
-	jwtPrivatePath := os.Getenv("JWT_PRIVATE_KEY")
-	jwtPassphrase := os.Getenv("JWT_PASSPHRASE")
-
-	jwtPrivateKey := shared.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
-	jwtPublicKey := shared.LoadRSAPublicKey(jwtPublicPath)
-
-	jwtAuth := jwtauth.New("RS256", jwtPrivateKey, jwtPublicKey)
+	jwtAuth := jwtauth.New("RS256", conf.JWTPrivateKey, conf.JWTPublicKey)
 
 	opts := pg.Options{
-		User: os.Getenv("DB_USER"),
-		Password: os.Getenv("DB_PASSWORD"),
-		Database: os.Getenv("DB_DATABASE"),
+		User: conf.DatabaseUser,
+		Password: conf.DatabasePassword,
+		Database: conf.DatabaseName,
 	}
 
 	db := pg.Connect(&opts)
@@ -76,25 +64,34 @@ func Start(port string) App {
 		log.Fatalf("Error opening database connection: %v", err)
 	}
 
-	repos := repository.Init(db)
-	a := App{
-		db,
-		&repos,
-		jwtAuth,
+	rdb := redis.NewClient(&redis.Options{
+		Addr: conf.RedisAddr,
+		Password: conf.RedisPassword,
+		DB: conf.RedisDatabase,
+	})
+
+	myCache := cache.New(&cache.Options{
+		Redis: rdb,
+		LocalCache: cache.NewTinyLFU(1000, time.Minute),
+	})
+
+	repos := repository.Init(db, myCache)
+	s := Server{
+		db: db,
+		repos: &repos,
+		jwt: jwtAuth,
+		rdb: rdb,
 	}
-	r := NewRouter(&a)
 
-	log.Printf("Listening on port %v", port)
+	r := NewRouter(&s)
 
-	err := http.ListenAndServe("0.0.0.0:" + port, r)
+	log.Printf("Listening on port %v", conf.Port)
+
+	err := http.ListenAndServe("0.0.0.0:" + conf.Port, r)
 
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 
-	return a
-}
-
-func GetScopes(key string) []string {
-	return strings.Split(os.Getenv(key), ", ")
+	return s
 }
