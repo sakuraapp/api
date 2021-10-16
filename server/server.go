@@ -9,8 +9,7 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/discord"
 	"github.com/sakuraapp/api/internal/utils"
-	"github.com/sakuraapp/api/repositories"
-	"github.com/sakuraapp/api/routers"
+	"github.com/sakuraapp/api/repository"
 	shared "github.com/sakuraapp/shared/pkg"
 	"log"
 	"net/http"
@@ -20,7 +19,7 @@ import (
 
 type App struct {
 	DB *pg.DB
-	Repositories *repositories.Repositories
+	Repositories *repository.Repositories
 	JWT *jwtauth.JWTAuth
 }
 
@@ -28,7 +27,7 @@ func (a *App) GetDB() *pg.DB {
 	return a.DB
 }
 
-func (a *App) GetRepositories() *repositories.Repositories {
+func (a *App) GetRepositories() *repository.Repositories {
 	return a.Repositories
 }
 
@@ -77,13 +76,13 @@ func Start(port string) App {
 		log.Fatalf("Error opening database connection: %v", err)
 	}
 
-	repos := repositories.Init(db)
+	repos := repository.Init(db)
 	a := App{
 		db,
 		&repos,
 		jwtAuth,
 	}
-	r := routers.Init(&a)
+	r := NewRouter(&a)
 
 	log.Printf("Listening on port %v", port)
 

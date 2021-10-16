@@ -1,11 +1,11 @@
-package controllers
+package controller
 
 import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/api/middlewares"
-	"github.com/sakuraapp/api/responses"
+	"github.com/sakuraapp/api/middleware"
+	"github.com/sakuraapp/api/response"
 	"github.com/sakuraapp/shared/model"
 	"github.com/sakuraapp/shared/resource"
 	"net/http"
@@ -21,17 +21,17 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 	roomId, err := strconv.ParseInt(strRoomId, 10, 64)
 
 	if err != nil {
-		render.Render(w, r, responses.ErrBadRequest)
+		render.Render(w, r, response.ErrBadRequest)
 		return
 	}
 
 	room, err := c.app.GetRepositories().Room.Get(model.RoomId(roomId))
 
 	if err != nil {
-		render.Render(w, r, responses.ErrInternalError)
+		render.Render(w, r, response.ErrInternalError)
 	}
 
-	response := responses.NewRoomResponse(resource.NewRoom(room))
+	response := response.NewRoomResponse(resource.NewRoom(room))
 	render.Render(w, r, response)
 }
 
@@ -39,22 +39,22 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 	rooms, err := c.app.GetRepositories().Room.GetLatest()
 
 	if err != nil {
-		render.Render(w, r, responses.ErrInternalError)
+		render.Render(w, r, response.ErrInternalError)
 		return
 	}
 
-	response := responses.NewRoomListResponse(resource.NewRoomList(rooms))
+	response := response.NewRoomListResponse(resource.NewRoomList(rooms))
 	render.Render(w, r, response)
 }
 
 func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
-	user := middlewares.FromContext(r.Context())
+	user := middleware.FromContext(r.Context())
 
 	roomRepo := c.app.GetRepositories().Room
 	room, err := roomRepo.GetByOwnerId(user.Id)
 
 	if err != nil {
-		render.Render(w, r, responses.ErrInternalError)
+		render.Render(w, r, response.ErrInternalError)
 		return
 	}
 
@@ -68,11 +68,11 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 		err = roomRepo.Create(room)
 
 		if err != nil {
-			render.Render(w, r, responses.ErrInternalError)
+			render.Render(w, r, response.ErrInternalError)
 			return
 		}
 	}
 
-	response := responses.NewRoomResponse(resource.NewRoom(room))
+	response := response.NewRoomResponse(resource.NewRoom(room))
 	render.Render(w, r, response)
 }

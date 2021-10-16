@@ -1,4 +1,4 @@
-package routers
+package server
 
 import (
 	"github.com/go-chi/chi/v5"
@@ -6,12 +6,12 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/api/controllers"
+	"github.com/sakuraapp/api/controller"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/middlewares"
+	sakuraMiddleware "github.com/sakuraapp/api/middleware"
 )
 
-func Init(a internal.App) *chi.Mux {
+func NewRouter(a internal.App) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
@@ -27,7 +27,7 @@ func Init(a internal.App) *chi.Mux {
 	r.Use(middleware.Recoverer)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
-	c := controllers.Init(a)
+	c := controller.Init(a)
 
 	r.Route("/v1", func(r chi.Router) {
 		// authentication routes
@@ -39,7 +39,7 @@ func Init(a internal.App) *chi.Mux {
 		// authenticated routes
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(a.GetJWT()))
-			r.Use(middlewares.Authenticator(a))
+			r.Use(sakuraMiddleware.Authenticator(a))
 
 			// user routes
 			r.Get("/users/@me", c.User.GetMyUser)

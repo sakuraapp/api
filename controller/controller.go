@@ -1,9 +1,9 @@
-package controllers
+package controller
 
 import (
 	"github.com/go-chi/render"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/responses"
+	"github.com/sakuraapp/api/response"
 	"net/http"
 )
 
@@ -12,7 +12,7 @@ type Controller struct {
 }
 
 func (c *Controller) SendInternalError(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, responses.ErrInternalError)
+	render.Render(w, r, response.ErrInternalError)
 }
 
 type Controllers struct {

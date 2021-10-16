@@ -1,4 +1,4 @@
-package repositories
+package repository
 
 import (
 	"github.com/go-pg/pg/v10"
@@ -11,9 +11,9 @@ type RoomRepository struct {
 
 func (r *RoomRepository) Get(id model.RoomId) (*model.Room, error) {
 	room := new(model.Room)
-	err := r.db.Model(&room).
+	err := r.db.Model(room).
 		Relation("Owner").
-		Where("id = ?", id).
+		Where("room.id = ?", id).
 		First()
 
 	if err == pg.ErrNoRows {
@@ -57,7 +57,7 @@ func (r *RoomRepository) GetByOwnerId(id model.UserId) (*model.Room, error) {
 }
 
 func (r *RoomRepository) Create(room *model.Room) error {
-	_, err := r.db.Model(room).Insert()
+	_, err := r.db.QueryOne(room, `INSERT INTO "rooms" ("id", "name", "owner_id", "private") VALUES (DEFAULT, ?, ?, ?) RETURNING "id"`, room.Name, room.OwnerId, room.Private)
 
 	return err
 }

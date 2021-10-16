@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/responses"
+	"github.com/sakuraapp/api/response"
 	"github.com/sakuraapp/shared/model"
 	"net/http"
 )
@@ -15,7 +15,7 @@ import (
 const UserCtxKey = "user"
 
 func SendUnauthorized(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, responses.ErrUnauthorized)
+	render.Render(w, r, response.ErrUnauthorized)
 	return
 }
 
@@ -55,7 +55,10 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 			user, err := userRepo.GetWithDiscriminator(id)
 
 			if user == nil || err != nil {
-				fmt.Printf("error %v", err.Error())
+				if err != nil {
+					fmt.Printf("error %v", err.Error())
+				}
+
 				SendUnauthorized(w, r)
 				return
 			}

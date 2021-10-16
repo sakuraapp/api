@@ -37,7 +37,8 @@ CREATE TABLE users (
     provider character varying(255) NOT NULL,
     access_token text,
     refresh_token text,
-    external_user_id character varying(255) NOT NULL
+    external_user_id character varying(255) NOT NULL,
+    last_modified timestamp default now()
 );
 
 ALTER TABLE users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
