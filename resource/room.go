@@ -6,6 +6,15 @@ import (
 	"net/http"
 )
 
+type RoomUpdateRequest struct {
+	Name string `json:"name" msgpack:"name"`
+	Private bool `json:"private" msgpack:"private"`
+}
+
+func (req *RoomUpdateRequest) Bind(r *http.Request) error {
+	return nil
+}
+
 type RoomResponse struct {
 	Response
 	Room *resource.Room `json:"room,omitempty"`
@@ -18,16 +27,8 @@ func (res *RoomResponse) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 func NewRoomResponse(room *resource.Room) *RoomResponse {
-	var status int
-
-	if room != nil {
-		status = 200
-	} else {
-		status = 404
-	}
-
 	return &RoomResponse{
-		Response{status},
+		Response{200},
 		room,
 	}
 }

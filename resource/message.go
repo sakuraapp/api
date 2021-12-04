@@ -10,7 +10,7 @@ type MessageRequest struct {
 	Content string `json:"content"`
 }
 
-func (m *MessageRequest) Bind(r *http.Request) error {
+func (req *MessageRequest) Bind(r *http.Request) error {
 	return nil
 }
 

@@ -61,3 +61,12 @@ func (r *RoomRepository) Create(room *model.Room) error {
 
 	return err
 }
+
+func (r *RoomRepository) UpdateInfo(room *model.Room) error {
+	_, err := r.db.Model(room).
+		Set("name = ?name, private = ?private").
+		Where("id = ?", room.Id).
+		Update()
+
+	return err
+}

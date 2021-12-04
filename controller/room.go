@@ -37,6 +37,12 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 
 	if err != nil {
 		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	if room == nil {
+		render.Render(w, r, apiResource.ErrNotFound)
+		return
 	}
 
 	res := apiResource.NewRoomResponse(resource.NewRoom(room))
@@ -83,6 +89,82 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 
 	res := apiResource.NewRoomResponse(resource.NewRoom(room))
 	render.Render(w, r, res)
+}
+
+func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
+	strRoomId := chi.URLParam(r, "roomId")
+	roomId, err := strconv.Atoi(strRoomId)
+
+	if err != nil {
+		render.Render(w, r, apiResource.ErrBadRequest)
+		return
+	}
+
+	data := &apiResource.RoomUpdateRequest{}
+	err = render.Bind(r, data)
+
+	if err != nil || len(data.Name) == 0 {
+		render.Render(w, r, apiResource.ErrBadRequest)
+		return
+	}
+
+	roomRepo := c.app.GetRepositories().Room
+	room, err := roomRepo.Get(model.RoomId(roomId))
+
+	if err != nil {
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	if room == nil {
+		render.Render(w, r, apiResource.ErrNotFound)
+		return
+	}
+
+	ctx := r.Context()
+	user := middleware.UserFromContext(ctx)
+
+	// todo: add MANAGE_ROOM permission - need to separate permissions from the session (and attach it to the user themself) and possibly add roles
+
+	if user.Id != room.OwnerId {
+		render.Render(w, r, apiResource.ErrForbidden)
+		return
+	}
+
+	room.Name = data.Name
+	room.Private = data.Private
+
+	err = roomRepo.UpdateInfo(room)
+
+	if err != nil {
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	message := resource.ServerMessage{
+		Data: resource.BuildPacket(opcode.UpdateRoom, data),
+	}
+
+	bytes, err := msgpack.Marshal(message)
+
+	if err != nil {
+		fmt.Printf("Serialization Error: %v", err.Error())
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	roomKey := fmt.Sprintf(constant.RoomFmt, roomId)
+
+	rdb := c.app.GetRedis()
+	err = rdb.Publish(ctx, roomKey, bytes).Err()
+
+	if err != nil {
+		fmt.Printf("Error publishing message: %v", err.Error())
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	render.Render(w, r, apiResource.NewResponse(200))
 }
 
 func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {

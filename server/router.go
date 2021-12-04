@@ -48,7 +48,9 @@ func NewRouter(a internal.App) *chi.Mux {
 			r.Route("/rooms", func(r chi.Router) {
 				r.Post("/", c.Room.Create)
 				r.Get("/latest", c.Room.GetLatest)
+
 				r.Get("/{roomId}", c.Room.Get)
+				r.Put("/{roomId}", c.Room.Update)
 
 				// room routes for room members only
 				r.Group(func(r chi.Router) {

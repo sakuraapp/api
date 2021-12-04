@@ -14,3 +14,7 @@ func (res *Response) Render(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
+
+func NewResponse(status int) *Response {
+	return &Response{Status: status}
+}
