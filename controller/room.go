@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/sakuraapp/api/internal"
 	"github.com/sakuraapp/api/middleware"
 	apiResource "github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/constant"
@@ -16,6 +16,9 @@ import (
 	"net/http"
 	"strconv"
 )
+
+const defaultQueueLimit = 20
+const maxQueueLimit = 50
 
 type RoomController struct {
 	Controller
@@ -53,7 +56,7 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
-	user := middleware.FromContext(r.Context())
+	user := middleware.UserFromContext(r.Context())
 
 	roomRepo := c.app.GetRepositories().Room
 	room, err := roomRepo.GetByOwnerId(user.Id)
@@ -83,45 +86,12 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
-	strRoomId := chi.URLParam(r, "roomId")
-	intRoomId, err := strconv.Atoi(strRoomId)
-
-	if err != nil {
-		render.Render(w, r, apiResource.ErrBadRequest)
-		return
-	}
-
-	roomId := model.RoomId(intRoomId)
-
 	ctx := r.Context()
-
-	user := middleware.FromContext(ctx)
-	sessionId := r.Header.Get("X-Session-Id")
-
-	if sessionId == "" {
-		render.Render(w, r, apiResource.ErrForbidden)
-		return
-	}
-
-	sessionKey := fmt.Sprintf(constant.SessionFmt, sessionId)
-
-	var sess internal.Session
-
-	rdb := c.app.GetRedis()
-	err = rdb.HMGet(ctx, sessionKey, "user_id", "room_id", "node_id").Scan(&sess)
-
-	if err != nil {
-		render.Render(w, r, apiResource.ErrInternalError)
-		return
-	}
-
-	if sess.UserId != user.Id || sess.RoomId != roomId {
-		render.Render(w, r, apiResource.ErrForbidden)
-		return
-	}
+	user := middleware.UserFromContext(ctx)
+	sess := middleware.SessionFromContext(ctx)
 
 	data := &apiResource.MessageRequest{}
-	err = render.Bind(r, data)
+	err := render.Bind(r, data)
 
 	if err != nil || len(data.Content) == 0 {
 		render.Render(w, r, apiResource.ErrBadRequest)
@@ -138,9 +108,9 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	message := resource.ServerMessage{
 		Target: resource.MessageTarget{
-			IgnoredSessionIds: map[string]bool{sessionId: true},
+			IgnoredSessionIds: map[string]bool{sess.Id: true},
 		},
-		Data: resource.BuildPacket(opcode.SEND_MESSAGE, msg),
+		Data: resource.BuildPacket(opcode.SendMessage, msg),
 	}
 
 	bytes, err := msgpack.Marshal(message)
@@ -151,6 +121,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rdb := c.app.GetRedis()
 	err = rdb.Publish(ctx, roomKey, bytes).Err()
 
 	if err != nil {
@@ -160,5 +131,82 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := apiResource.NewMessageResponse(&msg)
+	render.Render(w, r, res)
+}
+
+func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	limit, err := strconv.ParseInt(q.Get("limit"), 10, 64)
+
+	if err != nil {
+		limit = defaultQueueLimit
+	}
+
+	after := q.Get("after")
+	start := int64(0)
+
+	ctx := r.Context()
+	rdb := c.app.GetRedis()
+
+	sess := middleware.SessionFromContext(ctx)
+	roomId := sess.RoomId
+
+	queueKey := fmt.Sprintf(constant.RoomQueueFmt, roomId)
+
+	if after != "" {
+		start, err = rdb.LPos(ctx, queueKey, after, redis.LPosArgs{}).Result()
+
+		if err != nil {
+			start = 0
+			fmt.Printf("Error reading item at index %v: %v", after, err.Error())
+		} else {
+			start += 1 // start 1 element after the specified one
+		}
+	}
+
+	ids, err := rdb.LRange(ctx, queueKey, start, start + limit - 1).Result()
+
+	if err != nil {
+		fmt.Printf("Error fetching queue: %v", err.Error())
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	numItems := len(ids)
+	queueItemsKey := fmt.Sprintf(constant.RoomQueueItemsFmt, roomId)
+
+	var items []resource.MediaItem
+
+	if numItems > 0 {
+		rawItems, err := rdb.HMGet(ctx, queueItemsKey, ids...).Result()
+
+		if err != nil {
+			fmt.Printf("Error fetching queue items: %v", err.Error())
+			render.Render(w, r, apiResource.ErrInternalError)
+			return
+		}
+
+		items = make([]resource.MediaItem, numItems)
+
+		for i, rawItem := range rawItems {
+			strItem, ok := rawItem.(string)
+
+			if ok {
+				byteItem := []byte(strItem)
+				err = items[i].UnmarshalBinary(byteItem)
+
+				if err != nil {
+					fmt.Printf("Deformed queue item: %v\n", err.Error())
+				}
+			} else {
+				fmt.Printf("Deformed queue item: %v\n", rawItem)
+			}
+		}
+	} else {
+		items = []resource.MediaItem{}
+	}
+
+	res := apiResource.NewQueueResponse(items)
 	render.Render(w, r, res)
 }

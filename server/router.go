@@ -48,9 +48,14 @@ func NewRouter(a internal.App) *chi.Mux {
 			r.Route("/rooms", func(r chi.Router) {
 				r.Post("/", c.Room.Create)
 				r.Get("/latest", c.Room.GetLatest)
-
 				r.Get("/{roomId}", c.Room.Get)
-				r.Post("/{roomId}/messages", c.Room.SendMessage)
+
+				// room routes for room members only
+				r.Group(func(r chi.Router) {
+					r.Use(sakuraMiddleware.RoomMemberCheck(a))
+					r.Get("/{roomId}/queue", c.Room.GetQueue)
+					r.Post("/{roomId}/messages", c.Room.SendMessage)
+				})
 			})
 		})
 	})

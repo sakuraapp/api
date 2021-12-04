@@ -14,7 +14,7 @@ type UserController struct {
 }
 
 func (c *UserController) GetMyUser(w http.ResponseWriter, r *http.Request) {
-	user := middleware.FromContext(r.Context())
+	user := middleware.UserFromContext(r.Context())
 	userResource := apiResource.NewUserResponse(resource.NewUser(user))
 
 	fmt.Printf("%+v", userResource)
