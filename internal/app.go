@@ -16,6 +16,7 @@ type App interface {
 }
 
 type Session struct {
+	Id string `json:"id" redis:"id"`
 	UserId model.UserId `json:"user_id" redis:"user_id"`
 	RoomId model.RoomId `json:"room_id" redis:"room_id"`
 	NodeId string `json:"node_id" redis:"node_id"`
