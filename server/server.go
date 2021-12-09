@@ -21,6 +21,7 @@ type Server struct {
 	repos *repository.Repositories
 	jwt *jwtauth.JWTAuth
 	rdb *redis.Client
+	cache *cache.Cache
 }
 
 func (s *Server) GetDB() *pg.DB {
@@ -37,6 +38,10 @@ func (s *Server) GetJWT() *jwtauth.JWTAuth {
 
 func (s *Server) GetRedis() *redis.Client {
 	return s.rdb
+}
+
+func (s *Server) GetCache() *cache.Cache {
+	return s.cache
 }
 
 func Create(conf config.Config) Server {
@@ -81,6 +86,7 @@ func Create(conf config.Config) Server {
 		repos: &repos,
 		jwt: jwtAuth,
 		rdb: rdb,
+		cache: myCache,
 	}
 
 	r := NewRouter(&s)

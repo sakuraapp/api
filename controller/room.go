@@ -33,7 +33,8 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	room, err := c.app.GetRepositories().Room.Get(model.RoomId(roomId))
+	ctx := r.Context()
+	room, err := c.app.GetRepositories().Room.Get(ctx, model.RoomId(roomId))
 
 	if err != nil {
 		render.Render(w, r, apiResource.ErrInternalError)
@@ -108,8 +109,10 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+
 	roomRepo := c.app.GetRepositories().Room
-	room, err := roomRepo.Get(model.RoomId(roomId))
+	room, err := roomRepo.Get(ctx, model.RoomId(roomId))
 
 	if err != nil {
 		render.Render(w, r, apiResource.ErrInternalError)
@@ -121,7 +124,6 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
 	user := middleware.UserFromContext(ctx)
 
 	// todo: add MANAGE_ROOM permission - need to separate permissions from the session (and attach it to the user themself) and possibly add roles
@@ -137,6 +139,15 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	err = roomRepo.UpdateInfo(room)
 
 	if err != nil {
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	cacheKey := fmt.Sprintf(constant.RoomCacheFmt, roomId)
+	err = c.app.GetCache().Delete(ctx, cacheKey)
+
+	if err != nil {
+		fmt.Printf("Error deleting room cache: %v", err.Error())
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}

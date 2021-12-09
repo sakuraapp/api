@@ -3,6 +3,7 @@ package internal
 import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-pg/pg/v10"
+	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/shared/model"
@@ -13,6 +14,7 @@ type App interface {
 	GetRepositories() *repository.Repositories
 	GetJWT() *jwtauth.JWTAuth
 	GetRedis() *redis.Client
+	GetCache() *cache.Cache
 }
 
 type Session struct {
