@@ -16,7 +16,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lestrrat-go/jwx v1.2.6
 	github.com/markbates/goth v1.68.0
-	github.com/sakuraapp/shared v0.0.0-20211204162828-5136aad60b95
+	github.com/sakuraapp/shared v0.0.0-20211211135317-e1ba5ad0d9fb
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.4
 	gopkg.in/guregu/null.v4 v4.0.0

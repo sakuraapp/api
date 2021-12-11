@@ -46,8 +46,17 @@ func main() {
 	jwtPrivatePath := os.Getenv("JWT_PRIVATE_KEY")
 	jwtPassphrase := os.Getenv("JWT_PASSPHRASE")
 
-	jwtPrivateKey := shared.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
-	jwtPublicKey := shared.LoadRSAPublicKey(jwtPublicPath)
+	jwtPrivateKey, err := shared.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
+
+	if err != nil {
+		log.WithError(err).Fatal("Failed to load private key")
+	}
+
+	jwtPublicKey, err := shared.LoadRSAPublicKey(jwtPublicPath)
+
+	if err != nil {
+		log.WithError(err).Fatal("Failed to load public key")
+	}
 
 	redisAddr := os.Getenv("REDIS_ADDR")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
