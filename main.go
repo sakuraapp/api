@@ -4,8 +4,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/discord"
-	"github.com/sakuraapp/api/server"
 	"github.com/sakuraapp/api/config"
+	"github.com/sakuraapp/api/server"
 	shared "github.com/sakuraapp/shared/pkg"
 	"log"
 	"os"
@@ -24,6 +24,13 @@ func main() {
 
 	if port == "" {
 		port = "4000"
+	}
+
+	env := os.Getenv("APP_ENV")
+	envType := config.EnvDEV
+
+	if env == string(config.EnvPROD) {
+		envType = config.EnvPROD
 	}
 
 	goth.UseProviders(
@@ -48,6 +55,7 @@ func main() {
 	redisDb, err := strconv.Atoi(redisDatabase)
 
 	server.Create(config.Config{
+		Env: envType,
 		Port: port,
 		JWTPrivateKey: jwtPrivateKey,
 		JWTPublicKey: jwtPublicKey,
