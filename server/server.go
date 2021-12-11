@@ -13,7 +13,6 @@ import (
 	"github.com/sakuraapp/api/repository"
 	"log"
 	"net/http"
-	"time"
 )
 
 type Server struct {
@@ -77,7 +76,8 @@ func Create(conf config.Config) Server {
 
 	myCache := cache.New(&cache.Options{
 		Redis: rdb,
-		LocalCache: cache.NewTinyLFU(1000, time.Minute),
+		// LocalCache: cache.NewTinyLFU(1000, time.Minute),
+		// until server-assisted client cache is possible, don't keep a client cache (we can't invalidate it)
 	})
 
 	repos := repository.Init(db, myCache)

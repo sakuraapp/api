@@ -15,6 +15,6 @@ func Init(db *pg.DB, cache *cache.Cache) Repositories {
 	return Repositories{
 		User: UserRepository{db: db, cache: cache},
 		Discriminator: DiscriminatorRepository{db: db},
-		Room: RoomRepository{db: db},
+		Room: RoomRepository{db: db, cache: cache},
 	}
 }

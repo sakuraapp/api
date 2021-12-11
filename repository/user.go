@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
+	"github.com/sakuraapp/shared/constant"
 	"github.com/sakuraapp/shared/model"
-	"time"
 )
 
 type UserRepository struct {
@@ -19,11 +19,11 @@ func (u *UserRepository) GetWithDiscriminator(ctx context.Context, id model.User
 
 	if err := u.cache.Once(&cache.Item{
 		Ctx:   ctx,
-		Key:   fmt.Sprintf("user.%d", id),
+		Key:   fmt.Sprintf(constant.UserCacheFmt, id),
 		Value: user,
-		TTL:   15 * time.Minute,
+		TTL:   constant.UserCacheTTL,
 		Do: func(item *cache.Item) (interface{}, error) {
-			return u.FetchWithDiscriminator(id)
+			return u.fetchWithDiscriminator(user, id)
 		},
 	}); err != nil {
 		return nil, err
@@ -32,8 +32,7 @@ func (u *UserRepository) GetWithDiscriminator(ctx context.Context, id model.User
 	return user, nil
 }
 
-func (r *UserRepository) FetchWithDiscriminator(id model.UserId) (*model.User, error) {
-	user := new(model.User)
+func (r *UserRepository) fetchWithDiscriminator(user *model.User, id model.UserId) (*model.User, error) {
 	err := r.db.Model(user).
 		Column("user.*").
 		ColumnExpr("discriminator.value AS discriminator").
@@ -47,6 +46,12 @@ func (r *UserRepository) FetchWithDiscriminator(id model.UserId) (*model.User, e
 	}
 
 	return user, err
+}
+
+func (u *UserRepository) FetchWithDiscriminator(id model.UserId) (*model.User, error) {
+	user := new(model.User)
+
+	return u.fetchWithDiscriminator(user, id)
 }
 
 func (r *UserRepository) GetByExternalIdWithDiscriminator(id string) (*model.User, error) {
