@@ -7,7 +7,7 @@ import (
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/server"
 	shared "github.com/sakuraapp/shared/pkg"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"

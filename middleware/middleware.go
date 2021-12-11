@@ -12,6 +12,7 @@ import (
 	apiResource "github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/constant"
 	"github.com/sakuraapp/shared/model"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 )
@@ -21,7 +22,10 @@ const SessionCtxKey = "session"
 
 func SendUnauthorized(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, resource.ErrUnauthorized)
-	return
+}
+
+func SendInternalError(w http.ResponseWriter, r *http.Request)  {
+	render.Render(w, r, resource.ErrInternalError)
 }
 
 func UserFromContext(ctx context.Context) *model.User {
@@ -59,18 +63,23 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 			id := model.UserId(floatId)
 
 			if id == 0 {
-				fmt.Printf("not valid %v\n", id)
 				SendUnauthorized(w, r)
 				return
 			}
 
 			user, err := userRepo.GetWithDiscriminator(reqCtx, id)
 
-			if user == nil || err != nil {
-				if err != nil {
-					fmt.Printf("error %v", err.Error())
-				}
+			if err != nil {
+				log.
+					WithField("user_id", id).
+					WithError(err).
+					Error("Failed to get user")
 
+				SendInternalError(w, r)
+				return
+			}
+
+			if user == nil {
 				SendUnauthorized(w, r)
 				return
 			}
@@ -116,7 +125,12 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 			err = rdb.HMGet(reqCtx, sessionKey, "user_id", "room_id", "node_id").Scan(&sess)
 
 			if err != nil {
-				render.Render(w, r, apiResource.ErrInternalError)
+				log.
+					WithField("session_id", sessionId).
+					WithError(err).
+					Error("Failed to retrieve session")
+
+				SendInternalError(w, r)
 				return
 			}
 

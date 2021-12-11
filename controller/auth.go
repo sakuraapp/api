@@ -1,12 +1,12 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/markbates/goth/gothic"
 	"github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/model"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/guregu/null.v4"
 	"net/http"
 )
@@ -35,18 +35,25 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// todo: handle this error?
-		fmt.Printf("%v", err.Error())
+		log.WithError(err).Error("Failed to complete user auth")
 		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
-	fmt.Printf("User: %+v\n", extUser)
+	log.Debugf("User: %+v", extUser)
 
 	repos := c.app.GetRepositories()
 	user, err := repos.User.GetByExternalIdWithDiscriminator(extUser.UserID)
 
 	if err != nil {
-		fmt.Printf("%v", err)
+		log.
+			WithFields(log.Fields{
+				"provider": extUser.Provider,
+				"external_user_id": extUser.UserID,
+			}).
+			WithError(err).
+			Error("Failed to get user by external id")
+
 		c.SendInternalError(w, r)
 		return
 	}
@@ -55,7 +62,11 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		discrim, err := repos.Discriminator.FindFreeOne(name)
 
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.
+				WithField("name", name).
+				WithError(err).
+				Error("Failed to find a free discriminator")
+
 			c.SendInternalError(w, r)
 			return
 		}
@@ -78,7 +89,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		err = repos.User.Create(user)
 
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.WithError(err).Error("Failed to create user")
 			c.SendInternalError(w, r)
 			return
 		}
@@ -92,7 +103,11 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		err = repos.Discriminator.Create(discriminator)
 
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.
+				WithField("discriminator", discrim).
+				WithError(err).
+				Error("Failed to insert discriminator")
+
 			c.SendInternalError(w, r)
 			return
 		}
@@ -101,10 +116,14 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		user.RefreshToken = refreshToken
 		user.Avatar = avatar
 
-		err := repos.User.Update(user)
+		err = repos.User.Update(user)
 
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.
+				WithField("user_id", user.Id).
+				WithError(err).
+				Error("Failed to update user")
+
 			c.SendInternalError(w, r)
 			return
 		}
@@ -117,7 +136,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 	_, t, err := c.app.GetJWT().Encode(payload)
 
 	if err != nil {
-		fmt.Printf("%v", err)
+		log.WithError(err).Error("Failed to encode JWT")
 		c.SendInternalError(w, r)
 		return
 	}

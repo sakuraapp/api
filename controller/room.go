@@ -12,6 +12,7 @@ import (
 	"github.com/sakuraapp/shared/model"
 	"github.com/sakuraapp/shared/resource"
 	"github.com/sakuraapp/shared/resource/opcode"
+	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
 	"net/http"
 	"strconv"
@@ -37,6 +38,11 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 	room, err := c.app.GetRepositories().Room.Get(ctx, model.RoomId(roomId))
 
 	if err != nil {
+		log.
+			WithField("room_id", roomId).
+			WithError(err).
+			Error("Failed to get room")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -54,6 +60,7 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 	rooms, err := c.app.GetRepositories().Room.GetLatest()
 
 	if err != nil {
+		log.WithError(err).Error("Failed to get latest rooms")
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -69,6 +76,11 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 	room, err := roomRepo.GetByOwnerId(user.Id)
 
 	if err != nil {
+		log.
+			WithField("user_id", user.Id).
+			WithError(err).
+			Error("Failed to get room of user")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -83,6 +95,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 		err = roomRepo.Create(room)
 
 		if err != nil {
+			log.WithError(err).Errorf("Failed to create a room")
 			render.Render(w, r, apiResource.ErrInternalError)
 			return
 		}
@@ -115,6 +128,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	room, err := roomRepo.Get(ctx, model.RoomId(roomId))
 
 	if err != nil {
+		log.
+			WithField("room_id", roomId).
+			WithError(err).
+			Error("Failed to get room")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -139,6 +157,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	err = roomRepo.UpdateInfo(room)
 
 	if err != nil {
+		log.
+			WithField("room_id", room.Id).
+			WithError(err).
+			Error("Failed to update room")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -147,7 +170,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	err = c.app.GetCache().Delete(ctx, cacheKey)
 
 	if err != nil {
-		fmt.Printf("Error deleting room cache: %v", err.Error())
+		log.
+			WithField("room_id", roomId).
+			WithError(err).
+			Error("Failed to delete room cache")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -159,7 +186,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	bytes, err := msgpack.Marshal(message)
 
 	if err != nil {
-		fmt.Printf("Serialization Error: %v", err.Error())
+		log.
+			WithField("message", message).
+			WithError(err).
+			Error("Failed to serialize message")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -170,7 +201,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	err = rdb.Publish(ctx, roomKey, bytes).Err()
 
 	if err != nil {
-		fmt.Printf("Error publishing message: %v", err.Error())
+		log.
+			WithField("message", message).
+			WithError(err).
+			Error("Failed to publish message")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -209,7 +244,11 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	bytes, err := msgpack.Marshal(message)
 
 	if err != nil {
-		fmt.Printf("Serialization Error: %v", err.Error())
+		log.
+			WithField("message", message).
+			WithError(err).
+			Error("Failed to serialize message")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -218,7 +257,11 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	err = rdb.Publish(ctx, roomKey, bytes).Err()
 
 	if err != nil {
-		fmt.Printf("Error publishing message: %v", err.Error())
+		log.
+			WithField("message", message).
+			WithError(err).
+			Error("Failed to publish message")
+
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -252,7 +295,13 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			start = 0
-			fmt.Printf("Error reading item at index %v: %v", after, err.Error())
+			log.
+				WithFields(log.Fields{
+					"item_id": after,
+					"room_id": roomId,
+				}).
+				WithError(err).
+				Error("Failed to get index of queue item")
 		} else {
 			start += 1 // start 1 element after the specified one
 		}
@@ -261,7 +310,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 	ids, err := rdb.LRange(ctx, queueKey, start, start + limit - 1).Result()
 
 	if err != nil {
-		fmt.Printf("Error fetching queue: %v", err.Error())
+		log.WithError(err).Error("Failed to fetch queue")
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
@@ -275,7 +324,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 		rawItems, err := rdb.HMGet(ctx, queueItemsKey, ids...).Result()
 
 		if err != nil {
-			fmt.Printf("Error fetching queue items: %v", err.Error())
+			log.WithError(err).Error("Failed to fetch queue items")
 			render.Render(w, r, apiResource.ErrInternalError)
 			return
 		}
@@ -290,10 +339,10 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 				err = items[i].UnmarshalBinary(byteItem)
 
 				if err != nil {
-					fmt.Printf("Deformed queue item: %v\n", err.Error())
+					log.WithError(err).Error("Failed to parse queue item")
 				}
 			} else {
-				fmt.Printf("Deformed queue item: %v\n", rawItem)
+				log.WithField("item", rawItem).Warn("Deformed queue item")
 			}
 		}
 	} else {

@@ -11,7 +11,7 @@ import (
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/internal/utils"
 	"github.com/sakuraapp/api/repository"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -98,7 +98,7 @@ func Create(conf config.Config) Server {
 	err := http.ListenAndServe("0.0.0.0:" + conf.Port, r)
 
 	if err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		log.WithError(err).Fatal("Failed to start server")
 	}
 
 	return s

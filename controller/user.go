@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/go-chi/render"
 	"github.com/sakuraapp/api/middleware"
 	apiResource "github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/resource"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -17,6 +17,6 @@ func (c *UserController) GetMyUser(w http.ResponseWriter, r *http.Request) {
 	user := middleware.UserFromContext(r.Context())
 	userResource := apiResource.NewUserResponse(resource.NewUser(user))
 
-	fmt.Printf("%+v", userResource)
+	log.Debugf("%+v", userResource)
 	render.Render(w, r, userResource)
 }
