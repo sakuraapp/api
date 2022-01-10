@@ -9,6 +9,7 @@ type Repositories struct {
 	User UserRepository
 	Discriminator DiscriminatorRepository
 	Room RoomRepository
+	Role RoleRepository
 }
 
 func Init(db *pg.DB, cache *cache.Cache) Repositories {
@@ -16,5 +17,6 @@ func Init(db *pg.DB, cache *cache.Cache) Repositories {
 		User: UserRepository{db: db, cache: cache},
 		Discriminator: DiscriminatorRepository{db: db},
 		Room: RoomRepository{db: db, cache: cache},
+		Role: RoleRepository{db: db},
 	}
 }

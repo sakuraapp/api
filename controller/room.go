@@ -12,6 +12,7 @@ import (
 	"github.com/sakuraapp/shared/model"
 	"github.com/sakuraapp/shared/resource"
 	"github.com/sakuraapp/shared/resource/opcode"
+	"github.com/sakuraapp/shared/resource/role"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
 	"net/http"
@@ -73,6 +74,8 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 	user := middleware.UserFromContext(r.Context())
 
 	roomRepo := c.app.GetRepositories().Room
+	roleRepo := c.app.GetRepositories().Role
+
 	room, err := roomRepo.GetByOwnerId(user.Id)
 
 	if err != nil {
@@ -95,7 +98,23 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 		err = roomRepo.Create(room)
 
 		if err != nil {
-			log.WithError(err).Errorf("Failed to create a room")
+			log.WithError(err).Error("Failed to create a room")
+			render.Render(w, r, apiResource.ErrInternalError)
+			return
+		}
+
+		err = roleRepo.Add(&model.UserRole{
+			UserId: user.Id,
+			RoomId: room.Id,
+			RoleId: role.HOST,
+		})
+
+		if err != nil {
+			log.
+				WithField("room_id", room.Id).
+				WithError(err).
+				Error("Failed to add host for a newly created room")
+
 			render.Render(w, r, apiResource.ErrInternalError)
 			return
 		}
@@ -144,7 +163,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.UserFromContext(ctx)
 
-	// todo: add MANAGE_ROOM permission - need to separate permissions from the session (and attach it to the user themself) and possibly add roles
+	// todo: maybe add MANAGE_ROOM permission
 
 	if user.Id != room.OwnerId {
 		render.Render(w, r, apiResource.ErrForbidden)

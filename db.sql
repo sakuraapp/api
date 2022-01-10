@@ -50,6 +50,23 @@ ALTER TABLE users ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
     CACHE 1
 );
 
+CREATE TABLE user_roles(
+     "id" INTEGER NOT NULL,
+     "user_id" INTEGER NOT NULL,
+     "room_id" INTEGER NOT NULL,
+     "role" INTEGER NOT NULL
+);
+
+ALTER TABLE user_roles ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME user_roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
 ALTER TABLE ONLY discriminators
     ADD CONSTRAINT discriminators_pkey PRIMARY KEY (id);
 
@@ -62,11 +79,19 @@ ALTER TABLE ONLY users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
+ALTER TABLE ONLY user_roles
+    ADD CONSTRAINT user_roles_pkey PRIMARY KEY (id);
+
+
 CREATE INDEX discriminators_name_index ON discriminators USING btree (name);
 
 CREATE INDEX discriminators_owner_id_index ON discriminators USING btree (owner_id);
 
 CREATE INDEX rooms_owner_id_index ON rooms USING btree (owner_id);
+
+CREATE INDEX user_roles_user_id_index ON user_roles USING btree (user_id);
+
+CREATE INDEX user_roles_room_id_index ON user_roles USING btree (room_id);
 
 ALTER TABLE ONLY discriminators
     ADD CONSTRAINT discriminators_owner_id_foreign FOREIGN KEY (owner_id) REFERENCES users(id);
@@ -74,3 +99,10 @@ ALTER TABLE ONLY discriminators
 
 ALTER TABLE ONLY rooms
     ADD CONSTRAINT rooms_owner_id_foreign FOREIGN KEY (owner_id) REFERENCES users(id);
+
+
+ALTER TABLE user_roles
+    ADD CONSTRAINT user_roles_user_id_foreign FOREIGN KEY(user_id) REFERENCES users(id);
+
+ALTER TABLE user_roles
+    ADD CONSTRAINT user_roles_room_id_foreign FOREIGN KEY(room_id) REFERENCES rooms(id);
