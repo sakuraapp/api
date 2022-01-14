@@ -12,6 +12,7 @@ import (
 	"github.com/sakuraapp/shared/model"
 	"github.com/sakuraapp/shared/resource"
 	"github.com/sakuraapp/shared/resource/opcode"
+	"github.com/sakuraapp/shared/resource/permission"
 	"github.com/sakuraapp/shared/resource/role"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmihailenco/msgpack/v5"
@@ -163,9 +164,25 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.UserFromContext(ctx)
 
-	// todo: maybe add MANAGE_ROOM permission
+	roleRepo := c.app.GetRepositories().Role
+	userRoles, err := roleRepo.Get(user.Id, room.Id)
 
-	if user.Id != room.OwnerId {
+	if err != nil {
+		log.
+			WithFields(log.Fields{
+				"user_id": user.Id,
+				"room_id": room.Id,
+			}).
+			WithError(err).
+			Error("Failed to get user roles")
+
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
+
+	roles := model.BuildRoleManager(userRoles)
+
+	if !roles.HasPermission(permission.MANAGE_ROOM) {
 		render.Render(w, r, apiResource.ErrForbidden)
 		return
 	}

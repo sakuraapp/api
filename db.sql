@@ -54,7 +54,7 @@ CREATE TABLE user_roles(
      "id" INTEGER NOT NULL,
      "user_id" INTEGER NOT NULL,
      "room_id" INTEGER NOT NULL,
-     "role" INTEGER NOT NULL
+     "role_id" INTEGER NOT NULL
 );
 
 ALTER TABLE user_roles ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
