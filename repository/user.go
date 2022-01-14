@@ -32,8 +32,8 @@ func (u *UserRepository) GetWithDiscriminator(ctx context.Context, id model.User
 	return user, nil
 }
 
-func (r *UserRepository) fetchWithDiscriminator(user *model.User, id model.UserId) (*model.User, error) {
-	err := r.db.Model(user).
+func (u *UserRepository) fetchWithDiscriminator(user *model.User, id model.UserId) (*model.User, error) {
+	err := u.db.Model(user).
 		Column("user.*").
 		ColumnExpr("discriminator.value AS discriminator").
 		Join("LEFT JOIN discriminators AS discriminator ON discriminator.owner_id = ?", pg.Ident("user.id")).
@@ -54,9 +54,9 @@ func (u *UserRepository) FetchWithDiscriminator(id model.UserId) (*model.User, e
 	return u.fetchWithDiscriminator(user, id)
 }
 
-func (r *UserRepository) GetByExternalIdWithDiscriminator(id string) (*model.User, error) {
+func (u *UserRepository) GetByExternalIdWithDiscriminator(id string) (*model.User, error) {
 	user := new(model.User)
-	err := r.db.Model(user).
+	err := u.db.Model(user).
 		Column("user.*").
 		ColumnExpr("discriminator.value AS discriminator").
 		Join("LEFT JOIN discriminators AS discriminator ON discriminator.owner_id = ?", pg.Ident("user.id")).
@@ -71,16 +71,32 @@ func (r *UserRepository) GetByExternalIdWithDiscriminator(id string) (*model.Use
 	return user, err
 }
 
-func (r *UserRepository) Create(user *model.User) error {
-	_, err := r.db.Model(user).Insert()
+func (u *UserRepository) GetUsername(id model.UserId) (string, error) {
+	var username string
+	_, err := u.db.QueryOne(pg.Scan(&username), "SELECT username FROM users WHERE id = ? LIMIT 1", id)
+
+	return username, err
+}
+
+func (u *UserRepository) Create(user *model.User) error {
+	_, err := u.db.Model(user).Insert()
 
 	return err
 }
 
-func (r *UserRepository) Update(user *model.User) error {
-	_, err := r.db.Model(user).
+func (u *UserRepository) Update(user *model.User) error {
+	_, err := u.db.Model(user).
 		WherePK().
 		Update()
 
 	return err
+}
+
+func (u *UserRepository) Exists(id model.UserId) (bool, error) {
+	var exists bool
+	err := u.db.Model(pg.Scan(&exists)).
+		ColumnExpr("EXISTS(SELECT 1 FROM users WHERE id = ?)", id).
+		Select(&exists)
+
+	return exists, err
 }

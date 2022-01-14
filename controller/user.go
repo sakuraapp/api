@@ -14,7 +14,21 @@ type UserController struct {
 }
 
 func (c *UserController) GetMyUser(w http.ResponseWriter, r *http.Request) {
-	user := middleware.UserFromContext(r.Context())
+	ctx := r.Context()
+
+	userId := middleware.UserIdFromContext(ctx)
+	user, err := c.app.GetRepositories().User.GetWithDiscriminator(ctx, userId)
+
+	if err != nil {
+		log.
+			WithField("user_id", userId).
+			WithError(err).
+			Error("Failed to fetch user")
+
+		c.SendInternalError(w, r)
+		return
+	}
+
 	userResource := apiResource.NewUserResponse(resource.NewUser(user))
 
 	log.Debugf("%+v", userResource)

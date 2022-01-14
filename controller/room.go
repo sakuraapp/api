@@ -72,46 +72,52 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
-	user := middleware.UserFromContext(r.Context())
+	userId := middleware.UserIdFromContext(r.Context())
+	logger := log.WithField("user_id", userId)
 
+	userRepo := c.app.GetRepositories().User
 	roomRepo := c.app.GetRepositories().Room
 	roleRepo := c.app.GetRepositories().Role
 
-	room, err := roomRepo.GetByOwnerId(user.Id)
+	username, err := userRepo.GetUsername(userId)
 
 	if err != nil {
-		log.
-			WithField("user_id", user.Id).
-			WithError(err).
-			Error("Failed to get room of user")
+		logger.WithError(err).Error("Failed to get username of user")
+		render.Render(w, r, apiResource.ErrInternalError)
+		return
+	}
 
+	room, err := roomRepo.GetByOwnerId(userId)
+
+	if err != nil {
+		log.WithError(err).Error("Failed to get room of user")
 		render.Render(w, r, apiResource.ErrInternalError)
 		return
 	}
 
 	if room == nil {
 		room = &model.Room{
-			Name: fmt.Sprintf("%s's room", user.Username),
-			OwnerId: user.Id,
+			Name: fmt.Sprintf("%s's room", username),
+			OwnerId: userId,
 			Private: false,
 		}
 
 		err = roomRepo.Create(room)
 
 		if err != nil {
-			log.WithError(err).Error("Failed to create a room")
+			logger.WithError(err).Error("Failed to create a room")
 			render.Render(w, r, apiResource.ErrInternalError)
 			return
 		}
 
 		err = roleRepo.Add(&model.UserRole{
-			UserId: user.Id,
+			UserId: userId,
 			RoomId: room.Id,
 			RoleId: role.HOST,
 		})
 
 		if err != nil {
-			log.
+			logger.
 				WithField("room_id", room.Id).
 				WithError(err).
 				Error("Failed to add host for a newly created room")
@@ -162,15 +168,15 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := middleware.UserFromContext(ctx)
+	userId := middleware.UserIdFromContext(ctx)
 
 	roleRepo := c.app.GetRepositories().Role
-	userRoles, err := roleRepo.Get(user.Id, room.Id)
+	userRoles, err := roleRepo.Get(userId, room.Id)
 
 	if err != nil {
 		log.
 			WithFields(log.Fields{
-				"user_id": user.Id,
+				"user_id": userId,
 				"room_id": room.Id,
 			}).
 			WithError(err).
@@ -251,7 +257,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 
 func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := middleware.UserFromContext(ctx)
+	userId := middleware.UserIdFromContext(ctx)
 	sess := middleware.SessionFromContext(ctx)
 
 	data := &apiResource.MessageRequest{}
@@ -266,7 +272,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	id := uuid.NewString()
 	msg := resource.Message{
 		Id: id,
-		Author: user.Id,
+		Author: userId,
 		Content: data.Content,
 	}
 

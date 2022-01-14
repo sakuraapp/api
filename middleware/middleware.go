@@ -17,7 +17,7 @@ import (
 	"strconv"
 )
 
-const UserCtxKey = "user"
+const UserIdCtxKey = "user_id"
 const SessionCtxKey = "session"
 
 func SendUnauthorized(w http.ResponseWriter, r *http.Request) {
@@ -28,10 +28,10 @@ func SendInternalError(w http.ResponseWriter, r *http.Request)  {
 	render.Render(w, r, resource.ErrInternalError)
 }
 
-func UserFromContext(ctx context.Context) *model.User {
-	user, _ := ctx.Value(UserCtxKey).(*model.User)
+func UserIdFromContext(ctx context.Context) model.UserId {
+	userId, _ := ctx.Value(UserIdCtxKey).(model.UserId)
 
-	return user
+	return userId
 }
 
 func SessionFromContext(ctx context.Context) *internal.Session {
@@ -67,24 +67,24 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 				return
 			}
 
-			user, err := userRepo.GetWithDiscriminator(reqCtx, id)
+			exists, err := userRepo.Exists(id)
 
 			if err != nil {
 				log.
 					WithField("user_id", id).
 					WithError(err).
-					Error("Failed to get user")
+					Error("Failed to validate user's existence")
 
 				SendInternalError(w, r)
 				return
 			}
 
-			if user == nil {
+			if !exists {
 				SendUnauthorized(w, r)
 				return
 			}
 
-			ctx := context.WithValue(reqCtx, UserCtxKey, user)
+			ctx := context.WithValue(reqCtx, UserIdCtxKey, id)
 			r = r.WithContext(ctx)
 
 			// Token is authenticated, pass it through
@@ -110,7 +110,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 
 			reqCtx := r.Context()
 
-			user := UserFromContext(reqCtx)
+			userId := UserIdFromContext(reqCtx)
 			sessionId := r.Header.Get("X-Session-Id")
 
 			if sessionId == "" {
@@ -134,7 +134,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 				return
 			}
 
-			if sess.UserId != user.Id || sess.RoomId != roomId {
+			if sess.UserId != userId || sess.RoomId != roomId {
 				render.Render(w, r, apiResource.ErrForbidden)
 				return
 			}
