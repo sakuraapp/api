@@ -15,11 +15,11 @@ func NewRouter(a internal.App) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
+		AllowedOrigins:   a.GetConfig().AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Cache-Control", "X-Session-Id"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
@@ -31,9 +31,13 @@ func NewRouter(a internal.App) *chi.Mux {
 
 	r.Route("/v1", func(r chi.Router) {
 		// authentication routes
-		r.Route("/auth/{provider}", func(r chi.Router) {
-			r.Get("/", c.Auth.BeginAuth)
-			r.Get("/callback", c.Auth.CompleteAuth)
+		r.Route("/auth", func(r chi.Router) {
+			r.Route("/{provider}", func(r chi.Router) {
+				r.Get("/", c.Auth.BeginAuth)
+				r.Get("/callback", c.Auth.HandleCallback)
+			})
+
+			r.Post("/complete", c.Auth.CompleteAuth)
 		})
 
 		// authenticated routes

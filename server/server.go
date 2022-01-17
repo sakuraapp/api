@@ -7,20 +7,29 @@ import (
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
 	"github.com/sakuraapp/api/config"
-	"github.com/sakuraapp/api/internal/utils"
 	"github.com/sakuraapp/api/repository"
+	"github.com/sakuraapp/api/store"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
+const sessionMaxAge = 60 * 60 // 1 hour max - this isn't actually used for sessions, just the sign-up
+
 type Server struct {
+	config.Config
 	db *pg.DB
 	repos *repository.Repositories
 	jwt *jwtauth.JWTAuth
 	rdb *redis.Client
 	cache *cache.Cache
+	store store.Service
+}
+
+func (s *Server) GetConfig() *config.Config {
+	return &s.Config
 }
 
 func (s *Server) GetDB() *pg.DB {
@@ -43,10 +52,19 @@ func (s *Server) GetCache() *cache.Cache {
 	return s.cache
 }
 
+func (s *Server) GetStore() store.Service {
+	return s.store
+}
+
 func Create(conf config.Config) Server {
-	// use a fake store because this is a REST API, it's not vulnerable to CSRF anyway
-	// todo: re-evaluate this decision
-	gothic.Store = utils.NewFakeStore()
+	cookieStore := sessions.NewCookieStore([]byte(conf.SessionSecret))
+	cookieStore.MaxAge(sessionMaxAge)
+
+	cookieStore.Options.Path = "/"
+	cookieStore.Options.HttpOnly = true
+	cookieStore.Options.Secure = !conf.IsDev() // only use secure in production
+
+	gothic.Store = cookieStore
 
 	jwtAuth := jwtauth.New("RS256", conf.JWTPrivateKey, conf.JWTPublicKey)
 
@@ -82,13 +100,22 @@ func Create(conf config.Config) Server {
 		// until server-assisted client cache is possible, don't keep a client cache (we can't invalidate it)
 	})
 
-	repos := repository.Init(db, myCache)
+	myStore := store.NewS3Adapter(&store.S3Config{
+		Bucket: conf.S3Bucket,
+		Region: conf.S3Region,
+		Endpoint: conf.S3Endpoint,
+		ForcePathStyle: conf.S3ForcePathStyle,
+	})
+
+	repos := repository.Init(db, myCache, myStore)
 	s := Server{
+		Config: conf,
 		db: db,
 		repos: &repos,
 		jwt: jwtAuth,
 		rdb: rdb,
 		cache: myCache,
+		store: myStore,
 	}
 
 	r := NewRouter(&s)

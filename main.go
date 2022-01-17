@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/discord"
@@ -25,6 +26,8 @@ func main() {
 	if port == "" {
 		port = "4000"
 	}
+
+	allowedOrigins := strings.Split(strings.ToLower(os.Getenv("ALLOWED_ORIGINS")), ", ")
 
 	env := os.Getenv("APP_ENV")
 	envType := config.EnvDEV
@@ -61,19 +64,35 @@ func main() {
 	redisAddr := os.Getenv("REDIS_ADDR")
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	redisDatabase := os.Getenv("REDIS_DATABASE")
-	redisDb, err := strconv.Atoi(redisDatabase)
+	redisDb, _ := strconv.Atoi(redisDatabase)
+
+	s3Region := os.Getenv("S3_REGION")
+	s3Bucket := os.Getenv("S3_BUCKET")
+	s3Endpoint := os.Getenv("S3_ENDPOINT")
+	s3ForcePathStyleStr := os.Getenv("S3_FORCE_PATH_STYLE")
+	s3ForcePathStyle := false
+
+	if s3ForcePathStyleStr == "1" {
+		s3ForcePathStyle = true
+	}
 
 	server.Create(config.Config{
 		Env: envType,
 		Port: port,
+		AllowedOrigins: allowedOrigins,
 		JWTPrivateKey: jwtPrivateKey,
 		JWTPublicKey: jwtPublicKey,
 		DatabaseUser: os.Getenv("DB_USER"),
 		DatabasePassword: os.Getenv("DB_PASSWORD"),
 		DatabaseName: os.Getenv("DB_DATABASE"),
+		SessionSecret: os.Getenv("SESSION_SECRET"),
 		RedisAddr: redisAddr,
 		RedisPassword: redisPassword,
 		RedisDatabase: redisDb,
+		S3Bucket: aws.String(s3Bucket),
+		S3Region: aws.String(s3Region),
+		S3Endpoint: aws.String(s3Endpoint),
+		S3ForcePathStyle: &s3ForcePathStyle,
 	})
 }
 

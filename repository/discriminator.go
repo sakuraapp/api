@@ -14,9 +14,7 @@ type DiscriminatorRepository struct {
 	db *pg.DB
 }
 
-func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
-	var discrim string
-
+func (r *DiscriminatorRepository) FindFreeOne(name string) (*model.Discriminator, error) {
 	prev := new(model.Discriminator)
 	err := r.db.Model(prev).
 		Column("value").
@@ -25,8 +23,10 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
 		First()
 
 	if err == pg.ErrNoRows {
-		discrim = MinDiscriminator
-		return &discrim, nil
+		return &model.Discriminator{
+			Name: name,
+			Value: MinDiscriminator,
+		}, nil
 	}
 
 	if err != nil {
@@ -40,9 +40,10 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
 			return nil, err
 		}
 
-		discrim = fmt.Sprintf("%04d", intDiscrim + 1)
-
-		return &discrim, err
+		return &model.Discriminator{
+			Name: name,
+			Value: fmt.Sprintf("%04d", intDiscrim + 1),
+		}, err
 	}
 
 	available := new(model.Discriminator)
@@ -59,11 +60,21 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*string, error) {
 		return nil, err
 	}
 
-	return &available.Value, nil
+	return available, nil
 }
 
 func (r *DiscriminatorRepository) Create(discrim *model.Discriminator) error {
 	_, err := r.db.Model(discrim).Insert()
+
+	return err
+}
+
+func (r *DiscriminatorRepository) UpdateOwnerID(discrim *model.Discriminator) error {
+	_, err := r.db.Model(discrim).
+		WherePK().
+		Where("owner_id = ?", nil).
+		Set("owner_id = ?owner_id").
+		Update()
 
 	return err
 }

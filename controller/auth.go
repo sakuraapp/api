@@ -1,15 +1,22 @@
 package controller
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/markbates/goth/gothic"
-	"github.com/sakuraapp/api/resource"
+	apiResource "github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/model"
+	resource "github.com/sakuraapp/shared/resource"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/guregu/null.v4"
+	"io"
 	"net/http"
+	"path/filepath"
 )
+
+const formMemoryLimit = 32 << 20
 
 type AuthController struct {
 	Controller
@@ -22,7 +29,7 @@ func (c *AuthController) BeginAuth(w http.ResponseWriter, r *http.Request) {
 	gothic.BeginAuthHandler(w, req)
 }
 
-func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
+func (c *AuthController) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	provider := chi.URLParam(r, "provider")
 
 	req := gothic.GetContextWithProvider(r, provider)
@@ -36,7 +43,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// todo: handle this error?
 		log.WithError(err).Error("Failed to complete user auth")
-		render.Render(w, r, resource.ErrBadRequest)
+		render.Render(w, r, apiResource.ErrBadRequest)
 		return
 	}
 
@@ -58,63 +65,49 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user == nil {
-		discrim, err := repos.Discriminator.FindFreeOne(name)
+	userId := model.UserId(0)
 
-		if err != nil {
-			log.
-				WithField("name", name).
-				WithError(err).
-				Error("Failed to find a free discriminator")
+	if user != nil {
+		userId = user.Id
+	}
 
-			c.SendInternalError(w, r)
-			return
-		}
-
-		if discrim == nil {
-			render.Render(w, r, resource.ErrTooManyUsers)
-			return
-		}
-
+	if user == nil || user.Discriminator.IsZero() {
 		user = &model.User{
+			Id: userId,
 			Username: name,
-			Avatar: avatar,
 			Provider: extUser.Provider,
 			AccessToken: accessToken,
 			RefreshToken: refreshToken,
 			ExternalUserID: null.StringFrom(extUser.UserID),
-			Discriminator: null.StringFromPtr(discrim),
+			Discriminator: null.StringFromPtr(nil),
 		}
 
-		err = repos.User.Create(user)
+		var b []byte
+		b, err = json.Marshal(user)
 
 		if err != nil {
-			log.WithError(err).Error("Failed to create user")
+			log.WithError(err).Error("Failed to serialize user")
 			c.SendInternalError(w, r)
 			return
 		}
 
-		discriminator := &model.Discriminator{
-			Name: name,
-			Value: *discrim,
-			OwnerId: user.Id,
-		}
-
-		err = repos.Discriminator.Create(discriminator)
+		err = gothic.StoreInSession("user", string(b), r, w)
 
 		if err != nil {
-			log.
-				WithField("discriminator", discrim).
-				WithError(err).
-				Error("Failed to insert discriminator")
-
+			log.WithError(err).Error("Failed to store user in session")
 			c.SendInternalError(w, r)
 			return
 		}
+
+		res := apiResource.NewUserResponse(&resource.User{
+			Username: name,
+			Avatar: avatar,
+		})
+
+		render.Render(w, r, res)
 	} else {
 		user.AccessToken = accessToken
 		user.RefreshToken = refreshToken
-		user.Avatar = avatar
 
 		err = repos.User.Update(user)
 
@@ -127,10 +120,151 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 			c.SendInternalError(w, r)
 			return
 		}
+
+		c.handleAuthSuccess(user.Id, w, r)
+	}
+}
+
+func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
+	strUser, err := gothic.GetFromSession("user", r)
+
+	if err != nil {
+		log.WithError(err).Error("Failed to get user from the session")
+		render.Render(w, r, apiResource.ErrForbidden)
+		return
+	}
+
+	var user model.User
+	err = json.Unmarshal([]byte(strUser), &user)
+
+	if err != nil {
+		log.WithError(err).Error("Failed to parse user data in the session")
+		c.SendInternalError(w, r)
+		return
+	}
+
+	err = r.ParseMultipartForm(formMemoryLimit)
+
+	if err != nil {
+		log.WithError(err).Error("Failed to parse form data")
+		render.Render(w, r, apiResource.ErrBadRequest)
+		return
+	}
+
+	username := r.FormValue("username")
+
+	if username == "" {
+		render.Render(w, r, apiResource.ErrBadRequest)
+		return
+	}
+
+	avatar, avHeader, err := r.FormFile("avatar")
+
+	if err != nil && err != http.ErrMissingFile {
+		log.WithError(err).Error("Failed to read avatar file")
+		render.Render(w, r, apiResource.ErrBadRequest)
+		return
+	}
+
+	user.Username = username
+
+	fmt.Printf("%+v\n", avatar)
+
+	repos := c.app.GetRepositories()
+	discrim, err := repos.Discriminator.FindFreeOne(username)
+
+	if err != nil {
+		log.
+			WithField("name", username).
+			WithError(err).
+			Error("Failed to find a free discriminator")
+
+		c.SendInternalError(w, r)
+		return
+	}
+
+	if discrim == nil {
+		render.Render(w, r, apiResource.ErrTooManyUsers)
+		return
+	}
+
+	err = repos.User.Create(&user)
+
+	if err != nil {
+		log.WithError(err).Error("Failed to create user")
+		c.SendInternalError(w, r)
+		return
+	}
+
+	discrim.OwnerId = user.Id
+
+	if discrim.Id == 0 {
+		err = repos.Discriminator.Create(discrim)
+	} else {
+		err = repos.Discriminator.UpdateOwnerID(discrim)
+	}
+
+	if err != nil {
+		log.
+			WithField("user_id", user.Id).
+			WithField("discriminator", discrim).
+			WithError(err).
+			Error("Failed to insert discriminator")
+
+		c.SendInternalError(w, r)
+		return
+	}
+
+	if avatar != nil {
+		// we have to read the first 512 bytes of the image to determine its mimetype
+		buff := make([]byte, 512)
+		_, err = avatar.Read(buff)
+
+		if err != nil {
+			log.WithError(err).Error("Failed to read avatar file")
+			c.SendInternalError(w, r)
+			return
+		}
+
+		fileType := http.DetectContentType(buff)
+
+		if fileType != "image/jpeg" && fileType != "image/png" {
+			render.Render(w, r, apiResource.ErrBadRequest)
+			return
+		}
+
+		_, err = avatar.Seek(0, io.SeekStart)
+
+		if err != nil {
+			log.WithError(err).Error("Failed to seek avatar file")
+			c.SendInternalError(w, r)
+			return
+		}
+
+		ext := filepath.Ext(avHeader.Filename)
+		err = repos.User.SetAvatar(user.Id, avatar, ext)
+
+		if err != nil {
+			log.WithError(err).Error("Failed to set user avatar")
+			c.SendInternalError(w, r)
+			return
+		}
+	}
+
+	c.handleAuthSuccess(user.Id, w, r)
+}
+
+func (c *AuthController) handleAuthSuccess(userId model.UserId, w http.ResponseWriter, r *http.Request) {
+	err := gothic.Logout(w, r)
+
+	if err != nil {
+		log.WithError(err).Error("Failed to destroy login session")
+		c.SendInternalError(w, r)
+		return
 	}
 
 	payload := map[string]interface{}{
-		"id": user.Id,
+		"id": userId,
 	}
 
 	_, t, err := c.app.GetJWT().Encode(payload)
@@ -141,6 +275,6 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := resource.NewAuthResponse(&t)
+	res := apiResource.NewAuthResponse(&t)
 	render.Render(w, r, res)
 }

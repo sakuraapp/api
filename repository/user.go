@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
+	"github.com/sakuraapp/api/store"
 	"github.com/sakuraapp/shared/constant"
 	"github.com/sakuraapp/shared/model"
+	"mime/multipart"
 )
 
 type UserRepository struct {
 	db *pg.DB
 	cache *cache.Cache
+	store store.Service
 }
 
 func (u *UserRepository) GetWithDiscriminator(ctx context.Context, id model.UserId) (*model.User, error) {
@@ -79,7 +82,9 @@ func (u *UserRepository) GetUsername(id model.UserId) (string, error) {
 }
 
 func (u *UserRepository) Create(user *model.User) error {
-	_, err := u.db.Model(user).Insert()
+	_, err := u.db.Model(user).
+		OnConflict("(id) DO UPDATE").
+		Insert()
 
 	return err
 }
@@ -99,4 +104,17 @@ func (u *UserRepository) Exists(id model.UserId) (bool, error) {
 		Select(&exists)
 
 	return exists, err
+}
+
+func (u *UserRepository) SetAvatar(id model.UserId, file multipart.File, fileExt string) error {
+	key := fmt.Sprintf("%d%s", id, fileExt)
+	_, err := u.store.Upload(key, file)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = u.db.QueryOne(pg.Scan(&id), "UPDATE users SET avatar = ? WHERE id = ?", key, id)
+
+	return err
 }

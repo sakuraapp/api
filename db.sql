@@ -70,6 +70,9 @@ ALTER TABLE user_roles ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
 ALTER TABLE ONLY discriminators
     ADD CONSTRAINT discriminators_pkey PRIMARY KEY (id);
 
+ALTER TABLE ONLY discriminators
+    ADD CONSTRAINT discriminators_unique UNIQUE (name, value);
+
 
 ALTER TABLE ONLY rooms
     ADD CONSTRAINT rooms_pkey PRIMARY KEY (id);
