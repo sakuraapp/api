@@ -7,7 +7,9 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
+	"github.com/sakuraapp/api/store"
 	"github.com/sakuraapp/shared/model"
+	"github.com/sakuraapp/shared/resource"
 )
 
 type App interface {
@@ -17,6 +19,8 @@ type App interface {
 	GetJWT() *jwtauth.JWTAuth
 	GetRedis() *redis.Client
 	GetCache() *cache.Cache
+	GetStore() store.Service
+	GetBuilder() *resource.Builder
 }
 
 type Session struct {

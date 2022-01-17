@@ -12,6 +12,8 @@ import (
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/api/store"
+	"github.com/sakuraapp/shared/pkg"
+	"github.com/sakuraapp/shared/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -26,6 +28,7 @@ type Server struct {
 	rdb *redis.Client
 	cache *cache.Cache
 	store store.Service
+	resourceBuilder *resource.Builder
 }
 
 func (s *Server) GetConfig() *config.Config {
@@ -54,6 +57,10 @@ func (s *Server) GetCache() *cache.Cache {
 
 func (s *Server) GetStore() store.Service {
 	return s.store
+}
+
+func (s *Server) GetBuilder() *resource.Builder {
+	return s.resourceBuilder
 }
 
 func Create(conf config.Config) Server {
@@ -100,11 +107,20 @@ func Create(conf config.Config) Server {
 		// until server-assisted client cache is possible, don't keep a client cache (we can't invalidate it)
 	})
 
-	myStore := store.NewS3Adapter(&store.S3Config{
+	myStore := store.NewS3Adapter(&pkg.S3Config{
 		Bucket: conf.S3Bucket,
 		Region: conf.S3Region,
 		Endpoint: conf.S3Endpoint,
 		ForcePathStyle: conf.S3ForcePathStyle,
+	})
+
+	resourceBuilder := resource.NewBuilder()
+	resourceBuilder.SetUserFormatter(func(user *resource.User) *resource.User {
+		if !user.Avatar.IsZero() {
+			user.Avatar.String = myStore.ResolveURL(user.Avatar.String)
+		}
+
+		return user
 	})
 
 	repos := repository.Init(db, myCache, myStore)
@@ -116,6 +132,7 @@ func Create(conf config.Config) Server {
 		rdb: rdb,
 		cache: myCache,
 		store: myStore,
+		resourceBuilder: resourceBuilder,
 	}
 
 	r := NewRouter(&s)

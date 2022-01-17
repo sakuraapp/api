@@ -54,7 +54,9 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 		return
 	}
 
-	res := apiResource.NewRoomResponse(resource.NewRoom(room))
+	roomResource := c.app.GetBuilder().NewRoom(room)
+	res := apiResource.NewRoomResponse(roomResource)
+
 	render.Render(w, r, res)
 }
 
@@ -67,7 +69,9 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := apiResource.NewRoomListResponse(resource.NewRoomList(rooms))
+	list := c.app.GetBuilder().NewRoomList(rooms)
+	res := apiResource.NewRoomListResponse(list)
+
 	render.Render(w, r, res)
 }
 
@@ -127,7 +131,9 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res := apiResource.NewRoomResponse(resource.NewRoom(room))
+	roomResource := c.app.GetBuilder().NewRoom(room)
+	res := apiResource.NewRoomResponse(roomResource)
+
 	render.Render(w, r, res)
 }
 

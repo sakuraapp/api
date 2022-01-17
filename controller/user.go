@@ -4,7 +4,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/sakuraapp/api/middleware"
 	apiResource "github.com/sakuraapp/api/resource"
-	"github.com/sakuraapp/shared/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -29,8 +28,9 @@ func (c *UserController) GetMyUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userResource := apiResource.NewUserResponse(resource.NewUser(user))
+	userResource := c.app.GetBuilder().NewUser(user)
+	res := apiResource.NewUserResponse(userResource)
 
-	log.Debugf("%+v", userResource)
-	render.Render(w, r, userResource)
+	log.Debugf("%+v", res)
+	render.Render(w, r, res)
 }

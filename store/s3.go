@@ -1,27 +1,17 @@
 package store
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/sakuraapp/shared/pkg"
 	"mime/multipart"
-	"net/url"
 )
-
-type S3Config struct {
-	Region *string
-	Bucket *string
-	Endpoint *string
-	ForcePathStyle *bool
-	Credentials *credentials.Credentials
-}
 
 type S3Adapter struct {
 	baseUrl string
-	conf *S3Config
+	conf *pkg.S3Config
 	svc *s3.S3
 	uploader *s3manager.Uploader
 }
@@ -50,13 +40,12 @@ func (a *S3Adapter) Delete(key string) error {
 }
 
 func (a *S3Adapter) ResolveURL(key string) string {
-	return fmt.Sprintf("%s/%s", a.baseUrl, key)
+	return pkg.ResolveS3URL(a.baseUrl, key)
 }
 
-func NewS3Adapter(conf *S3Config) *S3Adapter {
+func NewS3Adapter(conf *pkg.S3Config) *S3Adapter {
 	awsConf := &aws.Config{
 		Region: conf.Region,
-		Credentials: conf.Credentials,
 		Endpoint: conf.Endpoint,
 		S3ForcePathStyle: conf.ForcePathStyle,
 	}
@@ -65,23 +54,8 @@ func NewS3Adapter(conf *S3Config) *S3Adapter {
 	svc := s3.New(sess)
 	uploader := s3manager.NewUploader(sess)
 
-	baseUrl := svc.Endpoint
-
-	if *conf.ForcePathStyle {
-		baseUrl += *conf.Bucket
-	} else {
-		u, err := url.Parse(baseUrl)
-
-		if err != nil {
-			panic(err)
-		}
-
-		u.Host = fmt.Sprintf("%s.%s", *conf.Bucket, u.Host)
-		baseUrl = u.String()
-	}
-
 	return &S3Adapter{
-		baseUrl: baseUrl,
+		baseUrl: pkg.GetS3BaseUrl(conf),
 		conf: conf,
 		svc: svc,
 		uploader: uploader,
