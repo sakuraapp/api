@@ -188,7 +188,11 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repos.User.Create(&user)
+	if user.Id == 0 {
+		err = repos.User.Create(&user)
+	} else {
+		err = repos.User.Update(&user)
+	}
 
 	if err != nil {
 		log.WithError(err).Error("Failed to create user")

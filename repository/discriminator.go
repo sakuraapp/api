@@ -48,8 +48,8 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*model.Discriminator
 
 	available := new(model.Discriminator)
 	err = r.db.Model(available).
-		Column("value").
-		Where("owner_id = NULL").
+		Column("id", "value").
+		Where("owner_id IS NULL").
 		First()
 
 	if err == pg.ErrNoRows {
@@ -72,7 +72,7 @@ func (r *DiscriminatorRepository) Create(discrim *model.Discriminator) error {
 func (r *DiscriminatorRepository) UpdateOwnerID(discrim *model.Discriminator) error {
 	_, err := r.db.Model(discrim).
 		WherePK().
-		Where("owner_id = ?", nil).
+		Where("owner_id IS NULL").
 		Set("owner_id = ?owner_id").
 		Update()
 

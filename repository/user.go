@@ -82,9 +82,7 @@ func (u *UserRepository) GetUsername(id model.UserId) (string, error) {
 }
 
 func (u *UserRepository) Create(user *model.User) error {
-	_, err := u.db.Model(user).
-		OnConflict("(id) DO UPDATE").
-		Insert()
+	_, err := u.db.Model(user).Insert()
 
 	return err
 }
@@ -98,12 +96,13 @@ func (u *UserRepository) Update(user *model.User) error {
 }
 
 func (u *UserRepository) Exists(id model.UserId) (bool, error) {
-	var exists bool
-	err := u.db.Model(pg.Scan(&exists)).
-		ColumnExpr("EXISTS(SELECT 1 FROM users WHERE id = ?)", id).
-		Select(&exists)
+	res, err := u.db.QueryOne(pg.Scan(&id), "SELECT 1 FROM users WHERE id = ? LIMIT 1", id)
 
-	return exists, err
+	if err == pg.ErrNoRows {
+		return false, nil
+	}
+
+	return res != nil, err
 }
 
 func (u *UserRepository) SetAvatar(id model.UserId, file multipart.File, fileExt string) error {
