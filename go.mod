@@ -2,8 +2,6 @@ module github.com/sakuraapp/api
 
 go 1.16
 
-replace github.com/sakuraapp/shared => /Users/jackie/Documents/Projects/Sakura/Source/shared
-
 require (
 	github.com/aws/aws-sdk-go v1.42.35 // indirect
 	github.com/go-chi/chi/v5 v5.0.3
@@ -19,7 +17,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lestrrat-go/jwx v1.2.6
 	github.com/markbates/goth v1.68.0
-	github.com/sakuraapp/shared v0.0.0-20220117182723-6da035d7fbb1
+	github.com/sakuraapp/shared v0.0.0-20220209212651-213da898aeab
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.4
 	gopkg.in/guregu/null.v4 v4.0.0

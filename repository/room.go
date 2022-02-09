@@ -34,7 +34,10 @@ func (r *RoomRepository) Get(ctx context.Context, id model.RoomId) (*model.Room,
 
 func (r *RoomRepository) fetch(room *model.Room, id model.RoomId) (*model.Room, error) {
 	err := r.db.Model(room).
+		Column("room.*").
 		Relation("Owner").
+		ColumnExpr("discriminator.value AS owner__discriminator").
+		Join("LEFT JOIN discriminators AS discriminator ON discriminator.owner_id = ?", pg.Ident("owner.id")).
 		Where("room.id = ?", id).
 		First()
 
@@ -49,9 +52,12 @@ func (r *RoomRepository) fetch(room *model.Room, id model.RoomId) (*model.Room, 
 func (r *RoomRepository) GetLatest() ([]model.Room, error) {
 	var rooms []model.Room
 	err := r.db.Model(&rooms).
+		Column("room.*").
 		Relation("Owner").
-		Where("private = FALSE").
-		Order("id DESC").
+		ColumnExpr("discriminator.value AS owner__discriminator").
+		Join("LEFT JOIN discriminators AS discriminator ON discriminator.owner_id = ?", pg.Ident("owner.id")).
+		Where("room.private = FALSE").
+		Order("room.id DESC").
 		Limit(5).
 		Select()
 
