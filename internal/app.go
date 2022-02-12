@@ -8,8 +8,8 @@ import (
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/api/store"
-	"github.com/sakuraapp/shared/model"
-	"github.com/sakuraapp/shared/resource"
+	"github.com/sakuraapp/shared/pkg/model"
+	"github.com/sakuraapp/shared/pkg/resource"
 )
 
 type App interface {
@@ -24,8 +24,8 @@ type App interface {
 }
 
 type Session struct {
-	Id string `json:"id" redis:"id"`
+	Id     string       `json:"id" redis:"id"`
 	UserId model.UserId `json:"user_id" redis:"user_id"`
 	RoomId model.RoomId `json:"room_id" redis:"room_id"`
-	NodeId string `json:"node_id" redis:"node_id"`
+	NodeId string       `json:"node_id" redis:"node_id"`
 }

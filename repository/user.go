@@ -6,8 +6,8 @@ import (
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
 	"github.com/sakuraapp/api/store"
-	"github.com/sakuraapp/shared/constant"
-	"github.com/sakuraapp/shared/model"
+	"github.com/sakuraapp/shared/pkg/constant"
+	"github.com/sakuraapp/shared/pkg/model"
 	"mime/multipart"
 )
 

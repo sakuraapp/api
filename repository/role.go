@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/go-pg/pg/v10"
-	"github.com/sakuraapp/shared/model"
+	"github.com/sakuraapp/shared/pkg/model"
 )
 
 type RoleRepository struct {

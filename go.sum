@@ -468,6 +468,8 @@ github.com/sakuraapp/shared v0.0.0-20220209212651-213da898aeab h1:VTV4BO4vvFkMgJ
 github.com/sakuraapp/shared v0.0.0-20220209212651-213da898aeab/go.mod h1:r3/uM6RXW4ChlcbJruH+2YZWZ0XxdI3In8zD5GOYBos=
 github.com/sakuraapp/shared v0.0.0-20220212004515-1ddae0c63c48 h1:f20X3AIkXfT3hNSixu+rHtJdylVRiTu01n9IJjRd4GI=
 github.com/sakuraapp/shared v0.0.0-20220212004515-1ddae0c63c48/go.mod h1:r3/uM6RXW4ChlcbJruH+2YZWZ0XxdI3In8zD5GOYBos=
+github.com/sakuraapp/shared v0.0.0-20220212221209-fed88f31a6b0 h1:xZlSzdI9Sbyv3jGFSIGTJjiUGEyarAnUcQ0wTazB8O4=
+github.com/sakuraapp/shared v0.0.0-20220212221209-fed88f31a6b0/go.mod h1:r3/uM6RXW4ChlcbJruH+2YZWZ0XxdI3In8zD5GOYBos=
 github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0XIa01GRL2eRQVjQkKGqKF3SF9vZR/HnPullcV2E=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=

@@ -2,7 +2,7 @@ package resource
 
 import (
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/shared/resource"
+	"github.com/sakuraapp/shared/pkg/resource"
 	"net/http"
 )
 

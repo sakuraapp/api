@@ -12,8 +12,8 @@ import (
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/api/store"
+	"github.com/sakuraapp/shared/pkg/resource"
 	sharedUtil "github.com/sakuraapp/shared/pkg/util"
-	"github.com/sakuraapp/shared/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
