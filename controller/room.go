@@ -32,7 +32,7 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 	roomId, err := strconv.Atoi(strRoomId)
 
 	if err != nil {
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -45,12 +45,12 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 			WithError(err).
 			Error("Failed to get room")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
 	if room == nil {
-		render.Render(w, r, apiResource.ErrNotFound)
+		render.Render(w, r, resource.ErrNotFound)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.WithError(err).Error("Failed to get latest rooms")
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logger.WithError(err).Error("Failed to get username of user")
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -95,7 +95,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.WithError(err).Error("Failed to get room of user")
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			logger.WithError(err).Error("Failed to create a room")
-			render.Render(w, r, apiResource.ErrInternalError)
+			render.Render(w, r, resource.ErrInternalError)
 			return
 		}
 
@@ -126,7 +126,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 				WithError(err).
 				Error("Failed to add host for a newly created room")
 
-			render.Render(w, r, apiResource.ErrInternalError)
+			render.Render(w, r, resource.ErrInternalError)
 			return
 		}
 	}
@@ -142,7 +142,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	roomId, err := strconv.Atoi(strRoomId)
 
 	if err != nil {
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 	err = render.Bind(r, data)
 
 	if err != nil || len(data.Name) == 0 {
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -165,12 +165,12 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to get room")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
 	if room == nil {
-		render.Render(w, r, apiResource.ErrNotFound)
+		render.Render(w, r, resource.ErrNotFound)
 		return
 	}
 
@@ -188,14 +188,14 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to get user roles")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
 	roles := model.BuildRoleManager(userRoles)
 
 	if !roles.HasPermission(permission.MANAGE_ROOM) {
-		render.Render(w, r, apiResource.ErrForbidden)
+		render.Render(w, r, resource.ErrForbidden)
 		return
 	}
 
@@ -210,7 +210,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to update room")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -223,7 +223,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to delete room cache")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -239,7 +239,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to serialize message")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -254,11 +254,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to publish message")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
-	render.Render(w, r, apiResource.NewResponse(200))
+	render.Render(w, r, resource.NewResponse(200))
 }
 
 func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
@@ -270,7 +270,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	err := render.Bind(r, data)
 
 	if err != nil || len(data.Content) == 0 {
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -297,7 +297,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to serialize message")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -310,7 +310,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 			WithError(err).
 			Error("Failed to publish message")
 
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -359,7 +359,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.WithError(err).Error("Failed to fetch queue")
-		render.Render(w, r, apiResource.ErrInternalError)
+		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
 
@@ -373,7 +373,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.WithError(err).Error("Failed to fetch queue items")
-			render.Render(w, r, apiResource.ErrInternalError)
+			render.Render(w, r, resource.ErrInternalError)
 			return
 		}
 

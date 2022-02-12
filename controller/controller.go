@@ -3,7 +3,7 @@ package controller
 import (
 	"github.com/go-chi/render"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/resource"
+	"github.com/sakuraapp/shared/pkg/resource"
 	"net/http"
 )
 

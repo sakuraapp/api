@@ -16,7 +16,7 @@ func (req *RoomUpdateRequest) Bind(r *http.Request) error {
 }
 
 type RoomResponse struct {
-	Response
+	resource.Response
 	Room *resource.Room `json:"room,omitempty"`
 }
 
@@ -28,13 +28,13 @@ func (res *RoomResponse) Render(w http.ResponseWriter, r *http.Request) error {
 
 func NewRoomResponse(room *resource.Room) *RoomResponse {
 	return &RoomResponse{
-		Response{200},
-		room,
+		Response: resource.Response{200},
+		Room: room,
 	}
 }
 
 type RoomListResponse struct {
-	Response
+	resource.Response
 	Rooms []*resource.Room `json:"rooms"`
 }
 
@@ -46,7 +46,7 @@ func (res *RoomListResponse) Render(w http.ResponseWriter, r *http.Request) erro
 
 func NewRoomListResponse(rooms []*resource.Room) *RoomListResponse {
 	return &RoomListResponse{
-		Response{200},
-		rooms,
+		Response: resource.Response{200},
+		Rooms: rooms,
 	}
 }

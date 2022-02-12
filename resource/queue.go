@@ -7,7 +7,7 @@ import (
 )
 
 type QueueResponse struct {
-	Response
+	resource.Response
 	Items []resource.MediaItem `json:"items,omitempty"`
 }
 
@@ -19,7 +19,7 @@ func (res *QueueResponse) Render(w http.ResponseWriter, r *http.Request) error {
 
 func NewQueueResponse(items []resource.MediaItem) *QueueResponse {
 	return &QueueResponse{
-		Response{Status: 200},
-		items,
+		Response: resource.Response{Status: 200},
+		Items: items,
 	}
 }

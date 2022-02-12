@@ -9,6 +9,7 @@ import (
 	"github.com/sakuraapp/api/controller"
 	"github.com/sakuraapp/api/internal"
 	sakuraMiddleware "github.com/sakuraapp/api/middleware"
+	sharedMiddleware "github.com/sakuraapp/shared/pkg/middleware"
 )
 
 func NewRouter(a internal.App) *chi.Mux {
@@ -43,7 +44,8 @@ func NewRouter(a internal.App) *chi.Mux {
 		// authenticated routes
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(a.GetJWT()))
-			r.Use(sakuraMiddleware.Authenticator(a))
+			r.Use(sharedMiddleware.Authenticator)
+			r.Use(sakuraMiddleware.UserValidator(a))
 
 			// user routes
 			r.Get("/users/@me", c.User.GetMyUser)

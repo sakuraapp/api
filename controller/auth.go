@@ -43,7 +43,7 @@ func (c *AuthController) HandleCallback(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		// todo: handle this error?
 		log.WithError(err).Error("Failed to complete user auth")
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.WithError(err).Error("Failed to get user from the session")
-		render.Render(w, r, apiResource.ErrForbidden)
+		render.Render(w, r, resource.ErrForbidden)
 		return
 	}
 
@@ -147,14 +147,14 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.WithError(err).Error("Failed to parse form data")
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
 	username := r.FormValue("username")
 
 	if username == "" {
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -162,7 +162,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil && err != http.ErrMissingFile {
 		log.WithError(err).Error("Failed to read avatar file")
-		render.Render(w, r, apiResource.ErrBadRequest)
+		render.Render(w, r, resource.ErrBadRequest)
 		return
 	}
 
@@ -233,7 +233,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 		fileType := http.DetectContentType(buff)
 
 		if fileType != "image/jpeg" && fileType != "image/png" {
-			render.Render(w, r, apiResource.ErrBadRequest)
+			render.Render(w, r, resource.ErrBadRequest)
 			return
 		}
 

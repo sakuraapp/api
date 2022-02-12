@@ -15,7 +15,7 @@ func (req *MessageRequest) Bind(r *http.Request) error {
 }
 
 type MessageResponse struct {
-	Response
+	resource.Response
 	Message *resource.Message `json:"message,omitempty"`
 }
 
@@ -27,7 +27,7 @@ func (res *MessageResponse) Render(w http.ResponseWriter, r *http.Request) error
 
 func NewMessageResponse(message *resource.Message) *MessageResponse {
 	return &MessageResponse{
-		Response{200},
-		message,
+		Response: resource.Response{Status: 200},
+		Message:  message,
 	}
 }

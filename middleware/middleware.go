@@ -4,14 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
-	"github.com/lestrrat-go/jwx/jwt"
 	"github.com/sakuraapp/api/internal"
-	"github.com/sakuraapp/api/resource"
-	apiResource "github.com/sakuraapp/api/resource"
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
+	"github.com/sakuraapp/shared/pkg/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -40,32 +37,13 @@ func SessionFromContext(ctx context.Context) *internal.Session {
 	return sess
 }
 
-func Authenticator(a internal.App) func(next http.Handler) http.Handler {
+func UserValidator(a internal.App) func(next http.Handler) http.Handler {
 	userRepo := a.GetRepositories().User
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			reqCtx := r.Context()
-			token, _, err := jwtauth.FromContext(reqCtx)
-
-			if err != nil {
-				SendUnauthorized(w, r)
-				return
-			}
-
-			if token == nil || jwt.Validate(token) != nil {
-				SendUnauthorized(w, r)
-				return
-			}
-
-			rawId, _ := token.Get("id")
-			floatId, _ := rawId.(float64)
-			id := model.UserId(floatId)
-
-			if id == 0 {
-				SendUnauthorized(w, r)
-				return
-			}
+			id := UserIdFromContext(reqCtx)
 
 			exists, err := userRepo.Exists(id)
 
@@ -84,10 +62,7 @@ func Authenticator(a internal.App) func(next http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(reqCtx, UserIdCtxKey, id)
-			r = r.WithContext(ctx)
-
-			// Token is authenticated, pass it through
+			// User exists, pass the request through
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -102,7 +77,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 			intRoomId, err := strconv.Atoi(strRoomId)
 
 			if err != nil {
-				render.Render(w, r, apiResource.ErrBadRequest)
+				render.Render(w, r, resource.ErrBadRequest)
 				return
 			}
 
@@ -114,7 +89,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 			sessionId := r.Header.Get("X-Session-Id")
 
 			if sessionId == "" {
-				render.Render(w, r, apiResource.ErrForbidden)
+				render.Render(w, r, resource.ErrForbidden)
 				return
 			}
 
@@ -135,7 +110,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 			}
 
 			if sess.UserId != userId || sess.RoomId != roomId {
-				render.Render(w, r, apiResource.ErrForbidden)
+				render.Render(w, r, resource.ErrForbidden)
 				return
 			}
 

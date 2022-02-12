@@ -7,7 +7,7 @@ import (
 )
 
 type UserResponse struct {
-	Response
+	resource.Response
 	User *resource.User `json:"user,omitempty"`
 }
 
@@ -27,7 +27,7 @@ func NewUserResponse(user *resource.User) *UserResponse {
 	}
 
 	return &UserResponse{
-		Response{status},
-		user,
+		Response: resource.Response{status},
+		User: user,
 	}
 }
