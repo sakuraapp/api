@@ -5,13 +5,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/sakuraapp/shared/pkg"
+	sharedUtil "github.com/sakuraapp/shared/pkg/util"
 	"mime/multipart"
 )
 
 type S3Adapter struct {
 	baseUrl string
-	conf *pkg.S3Config
+	conf *sharedUtil.S3Config
 	svc *s3.S3
 	uploader *s3manager.Uploader
 }
@@ -40,10 +40,10 @@ func (a *S3Adapter) Delete(key string) error {
 }
 
 func (a *S3Adapter) ResolveURL(key string) string {
-	return pkg.ResolveS3URL(a.baseUrl, key)
+	return sharedUtil.ResolveS3URL(a.baseUrl, key)
 }
 
-func NewS3Adapter(conf *pkg.S3Config) *S3Adapter {
+func NewS3Adapter(conf *sharedUtil.S3Config) *S3Adapter {
 	awsConf := &aws.Config{
 		Region: conf.Region,
 		Endpoint: conf.Endpoint,
@@ -55,7 +55,7 @@ func NewS3Adapter(conf *pkg.S3Config) *S3Adapter {
 	uploader := s3manager.NewUploader(sess)
 
 	return &S3Adapter{
-		baseUrl: pkg.GetS3BaseUrl(conf),
+		baseUrl: sharedUtil.GetS3BaseUrl(conf),
 		conf: conf,
 		svc: svc,
 		uploader: uploader,

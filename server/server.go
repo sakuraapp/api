@@ -12,7 +12,7 @@ import (
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/api/store"
-	"github.com/sakuraapp/shared/pkg"
+	sharedUtil "github.com/sakuraapp/shared/pkg/util"
 	"github.com/sakuraapp/shared/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -107,7 +107,7 @@ func Create(conf config.Config) Server {
 		// until server-assisted client cache is possible, don't keep a client cache (we can't invalidate it)
 	})
 
-	myStore := store.NewS3Adapter(&pkg.S3Config{
+	myStore := store.NewS3Adapter(&sharedUtil.S3Config{
 		Bucket: conf.S3Bucket,
 		Region: conf.S3Region,
 		Endpoint: conf.S3Endpoint,

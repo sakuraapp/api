@@ -7,7 +7,7 @@ import (
 	"github.com/markbates/goth/providers/discord"
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/server"
-	shared "github.com/sakuraapp/shared/pkg"
+	"github.com/sakuraapp/shared/pkg/crypto"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
@@ -49,13 +49,13 @@ func main() {
 	jwtPrivatePath := os.Getenv("JWT_PRIVATE_KEY")
 	jwtPassphrase := os.Getenv("JWT_PASSPHRASE")
 
-	jwtPrivateKey, err := shared.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
+	jwtPrivateKey, err := crypto.LoadRSAPrivateKey(jwtPrivatePath, jwtPassphrase)
 
 	if err != nil {
 		log.WithError(err).Fatal("Failed to load private key")
 	}
 
-	jwtPublicKey, err := shared.LoadRSAPublicKey(jwtPublicPath)
+	jwtPublicKey, err := crypto.LoadRSAPublicKey(jwtPublicPath)
 
 	if err != nil {
 		log.WithError(err).Fatal("Failed to load public key")
