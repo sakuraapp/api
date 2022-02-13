@@ -5,6 +5,7 @@ import (
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
+	"github.com/sakuraapp/api/adapter"
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/api/store"
@@ -16,6 +17,7 @@ type App interface {
 	GetConfig() *config.Config
 	GetDB() *pg.DB
 	GetRepositories() *repository.Repositories
+	GetAdapters() *adapter.Adapters
 	GetJWT() *jwtauth.JWTAuth
 	GetRedis() *redis.Client
 	GetCache() *cache.Cache

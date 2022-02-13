@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sakuraapp/api/middleware"
 	apiResource "github.com/sakuraapp/api/resource"
+	supervisorpb "github.com/sakuraapp/protobuf/supervisor"
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
@@ -399,4 +400,27 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 
 	res := apiResource.NewQueueResponse(items)
 	render.Render(w, r, res)
+}
+
+func (c *RoomController) DeployVM(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sess := middleware.SessionFromContext(ctx)
+
+	req := &supervisorpb.DeployRequest{
+		RoomId: int64(sess.RoomId),
+	}
+
+	supervisor := c.app.GetAdapters().Supervisor
+	_, err := supervisor.Deploy(ctx, req)
+
+	if err != nil {
+		render.Render(w, r, resource.ErrInternalError)
+		return
+	}
+
+	response := &resource.Response{
+		Status: 200,
+	}
+
+	render.Render(w, r, response)
 }

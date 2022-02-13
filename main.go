@@ -76,7 +76,7 @@ func main() {
 		s3ForcePathStyle = true
 	}
 
-	server.Create(config.Config{
+	server.Create(&config.Config{
 		Env: envType,
 		Port: port,
 		AllowedOrigins: allowedOrigins,
@@ -87,6 +87,8 @@ func main() {
 		DatabaseName: os.Getenv("DB_DATABASE"),
 		SessionSecret: os.Getenv("SESSION_SECRET"),
 		RedisAddr: redisAddr,
+		SupervisorAddr: os.Getenv("SUPERVISOR_ADDR"),
+		SupervisorKeyPath: os.Getenv("SUPERVISOR_KEY"),
 		RedisPassword: redisPassword,
 		RedisDatabase: redisDb,
 		S3Bucket: aws.String(s3Bucket),

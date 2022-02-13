@@ -26,6 +26,8 @@ type Config struct {
 	S3Bucket *string
 	S3Endpoint *string
 	S3ForcePathStyle *bool
+	SupervisorAddr string
+	SupervisorKeyPath string
 }
 
 func (c *Config) IsDev() bool {

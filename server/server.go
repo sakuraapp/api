@@ -9,11 +9,11 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
+	"github.com/sakuraapp/api/adapter"
 	"github.com/sakuraapp/api/config"
 	"github.com/sakuraapp/api/repository"
 	"github.com/sakuraapp/api/store"
 	"github.com/sakuraapp/shared/pkg/resource"
-	sharedUtil "github.com/sakuraapp/shared/pkg/util"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -21,7 +21,7 @@ import (
 const sessionMaxAge = 60 * 60 // 1 hour max - this isn't actually used for sessions, just the sign-up
 
 type Server struct {
-	config.Config
+	*config.Config
 	db *pg.DB
 	repos *repository.Repositories
 	jwt *jwtauth.JWTAuth
@@ -29,10 +29,11 @@ type Server struct {
 	cache *cache.Cache
 	store store.Service
 	resourceBuilder *resource.Builder
+	adapters *adapter.Adapters
 }
 
 func (s *Server) GetConfig() *config.Config {
-	return &s.Config
+	return s.Config
 }
 
 func (s *Server) GetDB() *pg.DB {
@@ -63,7 +64,11 @@ func (s *Server) GetBuilder() *resource.Builder {
 	return s.resourceBuilder
 }
 
-func Create(conf config.Config) Server {
+func (s *Server) GetAdapters() *adapter.Adapters {
+	return s.adapters
+}
+
+func Create(conf *config.Config) Server {
 	cookieStore := sessions.NewCookieStore([]byte(conf.SessionSecret))
 	cookieStore.MaxAge(sessionMaxAge)
 
@@ -107,12 +112,14 @@ func Create(conf config.Config) Server {
 		// until server-assisted client cache is possible, don't keep a client cache (we can't invalidate it)
 	})
 
-	myStore := store.NewS3Adapter(&sharedUtil.S3Config{
-		Bucket: conf.S3Bucket,
-		Region: conf.S3Region,
-		Endpoint: conf.S3Endpoint,
-		ForcePathStyle: conf.S3ForcePathStyle,
-	})
+	adapters, err := adapter.Init(conf)
+
+	if err != nil {
+		log.WithError(err).Fatal("Failed to initialize adapters")
+	}
+
+	var myStore store.Service
+	myStore = adapters.S3
 
 	resourceBuilder := resource.NewBuilder()
 	resourceBuilder.SetUserFormatter(func(user *resource.User) *resource.User {
@@ -133,13 +140,14 @@ func Create(conf config.Config) Server {
 		cache: myCache,
 		store: myStore,
 		resourceBuilder: resourceBuilder,
+		adapters: adapters,
 	}
 
 	r := NewRouter(&s)
 
 	log.Printf("Listening on port %v", conf.Port)
 
-	err := http.ListenAndServe("0.0.0.0:" + conf.Port, r)
+	err = http.ListenAndServe("0.0.0.0:" + conf.Port, r)
 
 	if err != nil {
 		log.WithError(err).Fatal("Failed to start server")

@@ -10,6 +10,7 @@ import (
 	"github.com/sakuraapp/api/internal"
 	sakuraMiddleware "github.com/sakuraapp/api/middleware"
 	sharedMiddleware "github.com/sakuraapp/shared/pkg/middleware"
+	"github.com/sakuraapp/shared/pkg/resource/permission"
 )
 
 func NewRouter(a internal.App) *chi.Mux {
@@ -55,14 +56,23 @@ func NewRouter(a internal.App) *chi.Mux {
 				r.Post("/", c.Room.Create)
 				r.Get("/latest", c.Room.GetLatest)
 
-				r.Get("/{roomId}", c.Room.Get)
-				r.Put("/{roomId}", c.Room.Update)
+				r.Route("/{roomId}", func(r chi.Router) {
+					r.Get("/", c.Room.Get)
+					r.Put("/", c.Room.Update)
 
-				// room routes for room members only
-				r.Group(func(r chi.Router) {
-					r.Use(sakuraMiddleware.RoomMemberCheck(a))
-					r.Get("/{roomId}/queue", c.Room.GetQueue)
-					r.Post("/{roomId}/messages", c.Room.SendMessage)
+					// room routes for room members only
+					r.Group(func(r chi.Router) {
+						r.Use(sakuraMiddleware.RoomMemberCheck(a))
+
+						r.Get("/queue", c.Room.GetQueue)
+						r.Post("/messages", c.Room.SendMessage)
+
+						r.Group(func(r chi.Router) {
+							r.Use(sakuraMiddleware.PermissionCheck(permission.MANAGE_ROOM, a))
+
+							r.Post("/vm", c.Room.DeployVM)
+						})
+					})
 				})
 			})
 		})

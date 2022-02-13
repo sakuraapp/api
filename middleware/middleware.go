@@ -9,6 +9,8 @@ import (
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
+	"github.com/sakuraapp/shared/pkg/resource/permission"
+	"github.com/sakuraapp/shared/pkg/resource/role"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -120,6 +122,49 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 			r = r.WithContext(ctx)
 
 			// Token is authenticated, pass it through
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func PermissionCheck(perm permission.Permission, a internal.App) func(next http.Handler) http.Handler {
+	roleRepo := a.GetRepositories().Role
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			reqCtx := r.Context()
+			sess := SessionFromContext(reqCtx)
+
+			userId := sess.UserId
+			roomId := sess.RoomId
+
+			userRoles, err := roleRepo.Get(userId, roomId)
+
+			if err != nil {
+				log.
+					WithError(err).
+					WithFields(log.Fields{
+						"user_id": userId,
+						"room_id": roomId,
+					}).
+					Error("Failed to retrieve user roles")
+
+				SendInternalError(w, r)
+				return
+			}
+
+			roles := role.NewManager()
+
+			for _, userRole := range userRoles {
+				roles.Add(userRole.RoleId)
+			}
+
+			if !roles.HasPermission(perm) {
+				render.Render(w, r, resource.ErrForbidden)
+				return
+			}
+
+			// User has the required permission, so pass their request
 			next.ServeHTTP(w, r)
 		})
 	}

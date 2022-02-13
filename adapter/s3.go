@@ -1,4 +1,4 @@
-package store
+package adapter
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

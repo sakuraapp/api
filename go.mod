@@ -3,7 +3,7 @@ module github.com/sakuraapp/api
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.42.35 // indirect
+	github.com/aws/aws-sdk-go v1.42.35
 	github.com/go-chi/chi/v5 v5.0.4
 	github.com/go-chi/cors v1.2.0
 	github.com/go-chi/jwtauth/v5 v5.0.2
@@ -15,10 +15,11 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/sessions v1.2.1
 	github.com/joho/godotenv v1.3.0
-	github.com/lestrrat-go/jwx v1.2.18
 	github.com/markbates/goth v1.68.0
+	github.com/sakuraapp/protobuf v0.0.0-20220213020135-b30573deeb41
 	github.com/sakuraapp/shared v0.0.0-20220212231301-1856d8dc3e03
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.8.1
 	github.com/vmihailenco/msgpack/v5 v5.3.4
+	google.golang.org/grpc v1.44.0
 	gopkg.in/guregu/null.v4 v4.0.0
 )
