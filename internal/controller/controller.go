@@ -2,13 +2,13 @@ package controller
 
 import (
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/api/internal/api"
+	"github.com/sakuraapp/api/internal/app"
 	"github.com/sakuraapp/shared/pkg/resource"
 	"net/http"
 )
 
 type Controller struct {
-	app api.App
+	app app.App
 }
 
 func (c *Controller) SendInternalError(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +21,7 @@ type Controllers struct {
 	Room RoomController
 }
 
-func Init(a api.App) Controllers {
+func Init(a app.App) Controllers {
 	return Controllers{
 		Auth: AuthController{Controller{a}},
 		User: UserController{Controller{a}},

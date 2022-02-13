@@ -1,14 +1,14 @@
-package api
+package app
 
 import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
-	"github.com/sakuraapp/api/adapter"
-	"github.com/sakuraapp/api/config"
-	"github.com/sakuraapp/api/repository"
-	"github.com/sakuraapp/api/store"
+	"github.com/sakuraapp/api/internal/adapter"
+	"github.com/sakuraapp/api/internal/config"
+	"github.com/sakuraapp/api/internal/repository"
+	"github.com/sakuraapp/api/pkg/store"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
 )

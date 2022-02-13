@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/api/middleware"
-	apiResource "github.com/sakuraapp/api/resource"
+	"github.com/sakuraapp/api/internal/middleware"
+	"github.com/sakuraapp/api/pkg/api"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
@@ -29,7 +29,7 @@ func (c *UserController) GetMyUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userResource := c.app.GetBuilder().NewUser(user)
-	res := apiResource.NewUserResponse(userResource)
+	res := api.NewUserResponse(userResource)
 
 	log.Debugf("%+v", res)
 	render.Render(w, r, res)

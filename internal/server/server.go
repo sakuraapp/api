@@ -9,10 +9,10 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth/gothic"
-	"github.com/sakuraapp/api/adapter"
-	"github.com/sakuraapp/api/config"
-	"github.com/sakuraapp/api/repository"
-	"github.com/sakuraapp/api/store"
+	"github.com/sakuraapp/api/internal/adapter"
+	"github.com/sakuraapp/api/internal/config"
+	"github.com/sakuraapp/api/internal/repository"
+	"github.com/sakuraapp/api/pkg/store"
 	"github.com/sakuraapp/shared/pkg/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -26,8 +26,8 @@ type Server struct {
 	repos *repository.Repositories
 	jwt *jwtauth.JWTAuth
 	rdb *redis.Client
-	cache *cache.Cache
-	store store.Service
+	cache           *cache.Cache
+	store           store.Service
 	resourceBuilder *resource.Builder
 	adapters *adapter.Adapters
 }

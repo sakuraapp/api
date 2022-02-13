@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/go-pg/pg/v10"
 	"github.com/go-redis/cache/v8"
-	"github.com/sakuraapp/api/store"
+	"github.com/sakuraapp/api/pkg/store"
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
 	"mime/multipart"

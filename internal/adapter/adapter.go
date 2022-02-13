@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"github.com/sakuraapp/api/config"
+	"github.com/sakuraapp/api/internal/config"
 	sharedUtil "github.com/sakuraapp/shared/pkg/util"
 )
 

@@ -24,7 +24,7 @@ func (r *DiscriminatorRepository) FindFreeOne(name string) (*model.Discriminator
 
 	if err == pg.ErrNoRows {
 		return &model.Discriminator{
-			Name: name,
+			Name:  name,
 			Value: MinDiscriminator,
 		}, nil
 	}

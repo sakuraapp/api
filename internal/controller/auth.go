@@ -6,9 +6,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/markbates/goth/gothic"
-	apiResource "github.com/sakuraapp/api/resource"
+	"github.com/sakuraapp/api/pkg/api"
 	"github.com/sakuraapp/shared/pkg/model"
-	resource "github.com/sakuraapp/shared/pkg/resource"
+	"github.com/sakuraapp/shared/pkg/resource"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/guregu/null.v4"
 	"io"
@@ -99,7 +99,7 @@ func (c *AuthController) HandleCallback(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		res := apiResource.NewUserResponse(&resource.User{
+		res := api.NewUserResponse(&resource.User{
 			Username: name,
 			Avatar: avatar,
 		})
@@ -184,7 +184,7 @@ func (c *AuthController) CompleteAuth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if discrim == nil {
-		render.Render(w, r, apiResource.ErrTooManyUsers)
+		render.Render(w, r, api.ErrTooManyUsers)
 		return
 	}
 
@@ -279,6 +279,6 @@ func (c *AuthController) handleAuthSuccess(userId model.UserId, w http.ResponseW
 		return
 	}
 
-	res := apiResource.NewAuthResponse(&t)
+	res := api.NewAuthResponse(&t)
 	render.Render(w, r, res)
 }

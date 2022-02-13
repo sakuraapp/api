@@ -6,14 +6,14 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/api/controller"
-	"github.com/sakuraapp/api/internal/api"
-	sakuraMiddleware "github.com/sakuraapp/api/middleware"
+	"github.com/sakuraapp/api/internal/app"
+	"github.com/sakuraapp/api/internal/controller"
+	sakuraMiddleware "github.com/sakuraapp/api/internal/middleware"
 	sharedMiddleware "github.com/sakuraapp/shared/pkg/middleware"
 	"github.com/sakuraapp/shared/pkg/resource/permission"
 )
 
-func NewRouter(a api.App) *chi.Mux {
+func NewRouter(a app.App) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{

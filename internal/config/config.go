@@ -5,12 +5,12 @@ import "crypto/rsa"
 type envType string
 
 const (
-	EnvDEV envType = "DEV"
+	EnvDEV  envType = "DEV"
 	EnvPROD envType = "PROD"
 )
 
 type Config struct {
-	Env envType
+	Env  envType
 	Port string
 	AllowedOrigins []string
 	DatabaseUser string

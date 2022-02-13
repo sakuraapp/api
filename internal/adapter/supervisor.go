@@ -1,7 +1,7 @@
 package adapter
 
 import (
-	"github.com/sakuraapp/api/config"
+	"github.com/sakuraapp/api/internal/config"
 	supervisorpb "github.com/sakuraapp/protobuf/supervisor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

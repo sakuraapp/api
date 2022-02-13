@@ -1,4 +1,4 @@
-package resource
+package api
 
 import (
 	"github.com/sakuraapp/shared/pkg/resource"

@@ -6,8 +6,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/sakuraapp/api/middleware"
-	apiResource "github.com/sakuraapp/api/resource"
+	"github.com/sakuraapp/api/internal/middleware"
+	"github.com/sakuraapp/api/pkg/api"
 	supervisorpb "github.com/sakuraapp/protobuf/supervisor"
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
@@ -56,7 +56,7 @@ func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
 	}
 
 	roomResource := c.app.GetBuilder().NewRoom(room)
-	res := apiResource.NewRoomResponse(roomResource)
+	res := api.NewRoomResponse(roomResource)
 
 	render.Render(w, r, res)
 }
@@ -71,7 +71,7 @@ func (c *RoomController) GetLatest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	list := c.app.GetBuilder().NewRoomList(rooms)
-	res := apiResource.NewRoomListResponse(list)
+	res := api.NewRoomListResponse(list)
 
 	render.Render(w, r, res)
 }
@@ -133,7 +133,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roomResource := c.app.GetBuilder().NewRoom(room)
-	res := apiResource.NewRoomResponse(roomResource)
+	res := api.NewRoomResponse(roomResource)
 
 	render.Render(w, r, res)
 }
@@ -147,7 +147,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &apiResource.RoomUpdateRequest{}
+	data := &api.RoomUpdateRequest{}
 	err = render.Bind(r, data)
 
 	if err != nil || len(data.Name) == 0 {
@@ -267,7 +267,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	userId := middleware.UserIdFromContext(ctx)
 	sess := middleware.SessionFromContext(ctx)
 
-	data := &apiResource.MessageRequest{}
+	data := &api.MessageRequest{}
 	err := render.Bind(r, data)
 
 	if err != nil || len(data.Content) == 0 {
@@ -315,7 +315,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := apiResource.NewMessageResponse(&msg)
+	res := api.NewMessageResponse(&msg)
 	render.Render(w, r, res)
 }
 
@@ -398,7 +398,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 		items = []resource.MediaItem{}
 	}
 
-	res := apiResource.NewQueueResponse(items)
+	res := api.NewQueueResponse(items)
 	render.Render(w, r, res)
 }
 
