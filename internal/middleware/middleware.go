@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/sakuraapp/api/internal"
+	"github.com/sakuraapp/api/internal/api"
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
@@ -33,13 +33,13 @@ func UserIdFromContext(ctx context.Context) model.UserId {
 	return userId
 }
 
-func SessionFromContext(ctx context.Context) *internal.Session {
-	sess, _ := ctx.Value(SessionCtxKey).(*internal.Session)
+func SessionFromContext(ctx context.Context) *api.Session {
+	sess, _ := ctx.Value(SessionCtxKey).(*api.Session)
 
 	return sess
 }
 
-func UserValidator(a internal.App) func(next http.Handler) http.Handler {
+func UserValidator(a api.App) func(next http.Handler) http.Handler {
 	userRepo := a.GetRepositories().User
 
 	return func(next http.Handler) http.Handler {
@@ -70,7 +70,7 @@ func UserValidator(a internal.App) func(next http.Handler) http.Handler {
 	}
 }
 
-func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
+func RoomMemberCheck(a api.App) func(next http.Handler) http.Handler {
 	rdb := a.GetRedis()
 
 	return func(next http.Handler) http.Handler {
@@ -97,7 +97,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 
 			sessionKey := fmt.Sprintf(constant.SessionFmt, sessionId)
 
-			var sess internal.Session
+			var sess api.Session
 
 			err = rdb.HMGet(reqCtx, sessionKey, "user_id", "room_id", "node_id").Scan(&sess)
 
@@ -127,7 +127,7 @@ func RoomMemberCheck(a internal.App) func(next http.Handler) http.Handler {
 	}
 }
 
-func PermissionCheck(perm permission.Permission, a internal.App) func(next http.Handler) http.Handler {
+func PermissionCheck(perm permission.Permission, a api.App) func(next http.Handler) http.Handler {
 	roleRepo := a.GetRepositories().Role
 
 	return func(next http.Handler) http.Handler {

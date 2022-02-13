@@ -1,4 +1,4 @@
-package internal
+package api
 
 import (
 	"github.com/go-chi/jwtauth/v5"
