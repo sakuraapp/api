@@ -284,7 +284,7 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message := resource.ServerMessage{
-		Target: resource.MessageTarget{
+		Target: &resource.MessageTarget{
 			IgnoredSessionIds: map[string]bool{sess.Id: true},
 		},
 		Data: resource.BuildPacket(opcode.SendMessage, msg),
@@ -414,6 +414,7 @@ func (c *RoomController) DeployVM(w http.ResponseWriter, r *http.Request) {
 	_, err := supervisor.Deploy(ctx, req)
 
 	if err != nil {
+		log.WithError(err).Error("Failed to send VM deployment request")
 		render.Render(w, r, resource.ErrInternalError)
 		return
 	}
