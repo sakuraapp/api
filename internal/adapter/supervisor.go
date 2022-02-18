@@ -5,6 +5,7 @@ import (
 	supervisorpb "github.com/sakuraapp/protobuf/supervisor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/resolver"
 )
 
 type SupervisorAdapter struct {
@@ -23,8 +24,11 @@ func NewSupervisorAdapter(conf *config.Config) (*SupervisorAdapter, error) {
 		return nil, err
 	}
 
+	resolver.SetDefaultScheme("dns")
+
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(creds),
+		grpc.WithDefaultServiceConfig(`{"loadBalancingConfig": [ { "round_robin": {} } ] }`), // use round-robin LB
 	}
 
 	conn, err := grpc.Dial(conf.SupervisorAddr, opts...)
