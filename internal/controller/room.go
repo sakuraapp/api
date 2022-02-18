@@ -9,6 +9,7 @@ import (
 	"github.com/sakuraapp/api/internal/middleware"
 	"github.com/sakuraapp/api/pkg/api"
 	supervisorpb "github.com/sakuraapp/protobuf/supervisor"
+	"github.com/sakuraapp/pubsub"
 	"github.com/sakuraapp/shared/pkg/constant"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
@@ -228,7 +229,7 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := resource.ServerMessage{
+	message := pubsub.Message{
 		Data: resource.BuildPacket(opcode.UpdateRoom, data),
 	}
 
@@ -283,8 +284,8 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 		Content: data.Content,
 	}
 
-	message := resource.ServerMessage{
-		Target: &resource.MessageTarget{
+	message := pubsub.Message{
+		Target: &pubsub.MessageTarget{
 			IgnoredSessionIds: map[string]bool{sess.Id: true},
 		},
 		Data: resource.BuildPacket(opcode.SendMessage, msg),
