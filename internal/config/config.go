@@ -11,7 +11,7 @@ const (
 
 type Config struct {
 	Env  envType
-	Port string
+	Port int
 	AllowedOrigins []string
 	DatabaseUser string
 	DatabasePassword string
