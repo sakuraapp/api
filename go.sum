@@ -141,7 +141,6 @@ github.com/go-pg/zerochecker v0.2.0/go.mod h1:NJZ4wKL0NmTtz0GKCoJ8kym6Xn/EQzXRl2
 github.com/go-redis/cache/v8 v8.4.3 h1:+RZ0pQM+zOd6h/oWCsOl3+nsCgii9rn26oCYmU87kN8=
 github.com/go-redis/cache/v8 v8.4.3/go.mod h1:5lQPQ63uyBt4aZuRmdvUJOJRRjPxfLtJtlcJ/z8o1jA=
 github.com/go-redis/redis/v8 v8.11.3/go.mod h1:xNJ9xDG09FsIPwh3bWdk+0oDWHbtF9rPN0F/oD9XeKc=
-github.com/go-redis/redis/v8 v8.11.4/go.mod h1:2Z2wHZXdQpCDXEGzqMockDpNyYvi2l4Pxt6RJr792+w=
 github.com/go-redis/redis/v8 v8.11.5-0.20211027084822-25378ca292e5 h1:5b6AqnHjfjtFQtpk4BxxhISwNbXp5OLHSnCka0VXmXc=
 github.com/go-redis/redis/v8 v8.11.5-0.20211027084822-25378ca292e5/go.mod h1:4n0I8TIzFGBa2n5p8peNo5zwLUIDjmU9O6P+ovV+9Mo=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
@@ -403,11 +402,6 @@ github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/sakuraapp/protobuf v0.0.0-20220213020135-b30573deeb41 h1:pB656vfWVa3zKKjyteioGAsNSZbIpBqXCEQk/3+mX/U=
 github.com/sakuraapp/protobuf v0.0.0-20220213020135-b30573deeb41/go.mod h1:f5BzqD5AuIzn/3KRvkoqLxyUCLWys2HBvhhsE642qhg=
-github.com/sakuraapp/pubsub v0.0.0-20220218184923-d077759d5c7f h1:RObh2MZ1rd7Ts5SRJaYljFnhqK4VWOszhIUhbhDwT3Y=
-github.com/sakuraapp/pubsub v0.0.0-20220218184923-d077759d5c7f/go.mod h1:fshUyktVor/DukN+KEl/pXpD5NoT43UIck7r2HeVLds=
-github.com/sakuraapp/shared v0.0.0-20220217101033-befba93b53ef/go.mod h1:RcqyqVQNH6LG+bSNqPEcI6OYYm1+8UnVC2C2H+Rgvu4=
-github.com/sakuraapp/shared v0.0.0-20220218190136-0d87f07b0c93 h1:VthPHkkz9IDGXUkS0gwS4N+uxmpjzH7SNHIvccAhGz4=
-github.com/sakuraapp/shared v0.0.0-20220218190136-0d87f07b0c93/go.mod h1:RcqyqVQNH6LG+bSNqPEcI6OYYm1+8UnVC2C2H+Rgvu4=
 github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0XIa01GRL2eRQVjQkKGqKF3SF9vZR/HnPullcV2E=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=

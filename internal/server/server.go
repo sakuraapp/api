@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-pg/pg/extra/pgdebug"
 	"github.com/go-pg/pg/v10"
@@ -13,6 +14,7 @@ import (
 	"github.com/sakuraapp/api/internal/config"
 	"github.com/sakuraapp/api/internal/repository"
 	"github.com/sakuraapp/api/pkg/store"
+	"github.com/sakuraapp/pubsub"
 	"github.com/sakuraapp/shared/pkg/resource"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -22,14 +24,15 @@ const sessionMaxAge = 60 * 60 // 1 hour max - this isn't actually used for sessi
 
 type Server struct {
 	*config.Config
-	db *pg.DB
-	repos *repository.Repositories
-	jwt *jwtauth.JWTAuth
-	rdb *redis.Client
+	pubsub.Dispatcher
+	db              *pg.DB
+	repos           *repository.Repositories
+	jwt             *jwtauth.JWTAuth
+	rdb             *redis.Client
 	cache           *cache.Cache
 	store           store.Service
 	resourceBuilder *resource.Builder
-	adapters *adapter.Adapters
+	adapters        *adapter.Adapters
 }
 
 func (s *Server) GetConfig() *config.Config {
@@ -81,7 +84,7 @@ func Create(conf *config.Config) Server {
 	jwtAuth := jwtauth.New("RS256", conf.JWTPrivateKey, conf.JWTPublicKey)
 
 	opts := pg.Options{
-		User: conf.DatabaseUser,
+		User:     conf.DatabaseUser,
 		Password: conf.DatabasePassword,
 		Database: conf.DatabaseName,
 	}
@@ -101,9 +104,9 @@ func Create(conf *config.Config) Server {
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr: conf.RedisAddr,
+		Addr:     conf.RedisAddr,
 		Password: conf.RedisPassword,
-		DB: conf.RedisDatabase,
+		DB:       conf.RedisDatabase,
 	})
 
 	myCache := cache.New(&cache.Options{
@@ -132,22 +135,23 @@ func Create(conf *config.Config) Server {
 
 	repos := repository.Init(db, myCache, myStore)
 	s := Server{
-		Config: conf,
-		db: db,
-		repos: &repos,
-		jwt: jwtAuth,
-		rdb: rdb,
-		cache: myCache,
-		store: myStore,
+		Config:          conf,
+		Dispatcher:      pubsub.NewRedisDispatcher[resource.Packet](ctx, "api", rdb),
+		db:              db,
+		repos:           &repos,
+		jwt:             jwtAuth,
+		rdb:             rdb,
+		cache:           myCache,
+		store:           myStore,
 		resourceBuilder: resourceBuilder,
-		adapters: adapters,
+		adapters:        adapters,
 	}
 
 	r := NewRouter(&s)
 
 	log.Printf("Listening on port %v", conf.Port)
 
-	err = http.ListenAndServe("0.0.0.0:" + conf.Port, r)
+	err = http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", +conf.Port), r)
 
 	if err != nil {
 		log.WithError(err).Fatal("Failed to start server")

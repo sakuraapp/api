@@ -9,11 +9,13 @@ import (
 	"github.com/sakuraapp/api/internal/config"
 	"github.com/sakuraapp/api/internal/repository"
 	"github.com/sakuraapp/api/pkg/store"
+	"github.com/sakuraapp/pubsub"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
 )
 
 type App interface {
+	pubsub.Dispatcher
 	GetConfig() *config.Config
 	GetDB() *pg.DB
 	GetRepositories() *repository.Repositories

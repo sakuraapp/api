@@ -9,8 +9,8 @@ import (
 	"github.com/sakuraapp/api/internal/middleware"
 	"github.com/sakuraapp/api/pkg/api"
 	supervisorpb "github.com/sakuraapp/protobuf/supervisor"
-	"github.com/sakuraapp/pubsub"
 	"github.com/sakuraapp/shared/pkg/constant"
+	dispatcher "github.com/sakuraapp/shared/pkg/dispatcher/gateway"
 	"github.com/sakuraapp/shared/pkg/model"
 	"github.com/sakuraapp/shared/pkg/resource"
 	"github.com/sakuraapp/shared/pkg/resource/opcode"
@@ -29,7 +29,7 @@ type RoomController struct {
 	Controller
 }
 
-func (c *RoomController) Get(w http.ResponseWriter, r *http.Request)  {
+func (c *RoomController) Get(w http.ResponseWriter, r *http.Request) {
 	strRoomId := chi.URLParam(r, "roomId")
 	roomId, err := strconv.Atoi(strRoomId)
 
@@ -103,7 +103,7 @@ func (c *RoomController) Create(w http.ResponseWriter, r *http.Request) {
 
 	if room == nil {
 		room = &model.Room{
-			Name: fmt.Sprintf("%s's room", username),
+			Name:    fmt.Sprintf("%s's room", username),
 			OwnerId: userId,
 			Private: false,
 		}
@@ -229,26 +229,11 @@ func (c *RoomController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := pubsub.Message{
-		Data: resource.BuildPacket(opcode.UpdateRoom, data),
+	message := dispatcher.Message{
+		Payload: resource.BuildPacket(opcode.UpdateRoom, data),
 	}
 
-	bytes, err := msgpack.Marshal(message)
-
-	if err != nil {
-		log.
-			WithField("message", message).
-			WithError(err).
-			Error("Failed to serialize message")
-
-		render.Render(w, r, resource.ErrInternalError)
-		return
-	}
-
-	roomKey := fmt.Sprintf(constant.RoomFmt, roomId)
-
-	rdb := c.app.GetRedis()
-	err = rdb.Publish(ctx, roomKey, bytes).Err()
+	err = c.app.DispatchTo(dispatcher.NewRoomTarget(model.RoomId(roomId)), &message)
 
 	if err != nil {
 		log.
@@ -279,38 +264,23 @@ func (c *RoomController) SendMessage(w http.ResponseWriter, r *http.Request) {
 	roomKey := fmt.Sprintf(constant.RoomFmt, sess.RoomId)
 	id := uuid.NewString()
 	msg := resource.Message{
-		Id: id,
-		Author: userId,
+		Id:      id,
+		Author:  userId,
 		Content: data.Content,
 	}
 
-	message := pubsub.Message{
-		Target: &pubsub.MessageTarget{
-			IgnoredSessionIds: map[string]bool{sess.Id: true},
-		},
-		Data: resource.BuildPacket(opcode.SendMessage, msg),
+	message := dispatcher.Message{
+		Payload: resource.BuildPacket(opcode.SendMessage, msg),
+		Filters: dispatcher.NewFilterMap().WithIgnoredSession(sess.Id),
 	}
 
-	bytes, err := msgpack.Marshal(message)
+	err = c.app.Dispatch(roomKey, &message)
 
 	if err != nil {
 		log.
 			WithField("message", message).
 			WithError(err).
-			Error("Failed to serialize message")
-
-		render.Render(w, r, resource.ErrInternalError)
-		return
-	}
-
-	rdb := c.app.GetRedis()
-	err = rdb.Publish(ctx, roomKey, bytes).Err()
-
-	if err != nil {
-		log.
-			WithField("message", message).
-			WithError(err).
-			Error("Failed to publish message")
+			Error("Failed to dispatch message")
 
 		render.Render(w, r, resource.ErrInternalError)
 		return
@@ -357,7 +327,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	ids, err := rdb.LRange(ctx, queueKey, start, start + limit - 1).Result()
+	ids, err := rdb.LRange(ctx, queueKey, start, start+limit-1).Result()
 
 	if err != nil {
 		log.WithError(err).Error("Failed to fetch queue")
@@ -386,7 +356,7 @@ func (c *RoomController) GetQueue(w http.ResponseWriter, r *http.Request) {
 
 			if ok {
 				byteItem := []byte(strItem)
-				err = items[i].UnmarshalBinary(byteItem)
+				err = msgpack.Unmarshal(byteItem, &items[i])
 
 				if err != nil {
 					log.WithError(err).Error("Failed to parse queue item")
